@@ -68,7 +68,7 @@ google_analytics: ''
 favicon: /favicon.png
 
 #你的头像url
-avatar: http://634566.haituie.cn/634566/img/l.jpg
+avatar: "img/1.jpg"
 
 #是否开启分享
 share_jia: true
