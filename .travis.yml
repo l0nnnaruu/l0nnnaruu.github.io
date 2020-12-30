@@ -10,10 +10,7 @@ branches:
   - hexo
 
 install:
-  - npm install hexo-cli -g
   - npm install
-  - npm install hexo-generator-feed --save
-  - npm install hexo-deployer-git --save
 
 cache:
   directories:
