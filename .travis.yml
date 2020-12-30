@@ -21,8 +21,7 @@ cache:
 
 script:
   - hexo clean
-  - hexo g
-  - hexo g
+  - hexo generate
 
 after_success:
   - cd ./public
