@@ -11,7 +11,7 @@ branches:
 
 install:
   - npm install
-  - npm install hexo-asset-image --save
+  - npm install hexo-renderer-marked
 
 cache:
   directories:
