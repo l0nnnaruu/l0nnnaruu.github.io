@@ -11,7 +11,13 @@ categories:
 
 this is my new blog
 
-![1609330916489](1609330916489.png)
+this is my new blog
+
+this is my new blog
+
+this is my new blog
+
+this is my new blog
 
 ```c++
 #include<iostream>
@@ -21,4 +27,6 @@ int main()
     return 0;
 }
 ```
+
+![1609421738124](1609421738124.png)
 
