@@ -940,8 +940,8 @@ images: images
 # For more information: https://valine.js.org, https://github.com/xCss/Valine
 valine:
   enable: true
-  appId: '9bU97eUlVolo8k1bLSDyGYDS-gzGzoHsz'
-  appKey: '2x9iSHrugO0EegGbFEjx16yV'
+  app_Id: 9bU97eUlVolo8k1bLSDyGYDS-gzGzoHsz
+  app_Key: 2x9iSHrugO0EegGbFEjx16yV
   serverURLs: # When the custom domain name is enabled, fill it in here
   placeholder: Just go go # comment box placeholder
   avatar: mm # gravatar style
