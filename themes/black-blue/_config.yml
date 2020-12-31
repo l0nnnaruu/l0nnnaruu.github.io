@@ -10,7 +10,7 @@ menu:
 # 静心阅读: /tags
 
 # Link to your avatar | 填写头像地址
-avatar: /img/avatar.png
+avatar: /img/lonmar.jpg
 
 # Small icon of Your site | 站点小图标地址
 favicon: /img/favicon.png
@@ -28,7 +28,7 @@ subnav:
   weibo: xxxxxxxx
   rss: /atom.xml
 
-  # Google: "#"
+# Google: "#"
 # search_box: true
 
 # >>> Conments 评论系统 <<<
@@ -40,7 +40,7 @@ disqus:
   # It is unnecessary to enable disqus here if
   # you have set "disqus_shortname" in your site's "_config.yml"
 changyan:
-  on: true
+  on: false
   appid: cyvev1GYX
   conf: 26ed91a8dfe472f2adff4d0284dcc785
   # 是否开启畅言评论，
@@ -48,10 +48,10 @@ changyan:
   # 畅言评论在 Web 环境下运行，普通本地环境无法查看，请部署后在线上测试。
 gitment:
   on: true
-  githubID: yourid
-  repo: yourrepo
-  client_id: yourid
-  client_secret: yoursecret
+  githubID: l0nnnaruu
+  repo: l0nnnaruu.github.io
+  client_id: 6f10e6807b746c7f414b
+  client_secret: bdea4877781e68415605d54af2b51c89fb07c552
   lazy: true
 
 # >>> Style Customisation 样式自定义 <<<
@@ -107,11 +107,10 @@ tagcloud: true
 # Blogroll, Link exchange | 友情链接
 # friends: false
 friends:
-  csdn: http://blog.csdn.net/baidu_21483933
-  segmentfault: https://segmentfault.com/blog/maocg_web
-  简书: http://www.jianshu.com/users/eb37ef89c746/latest_articles
+  csdn: https://blog.csdn.net/weixin_45551083
+  博客园: https://www.cnblogs.com/l0nmar/
 #是否开启“关于我”。
-aboutme: 爱动漫,爱游戏,爱编程,爱运动,爱的太多了!
+aboutme: ctf菜鸡
 #aboutme: false
 
 # 是否在新窗口打开链接
@@ -133,7 +132,7 @@ mathjax: false
 
 # Socail Share | 是否开启分享
 # share: true
-baidushare: true
+baidushare: false
 #showshare: true
 
 # 百度、谷歌站长验证。填写 HTML 标签 content
