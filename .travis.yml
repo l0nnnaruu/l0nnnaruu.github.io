@@ -12,6 +12,8 @@ branches:
 install:
   - npm install
   - npm install hexo-renderer-marked
+  - npm install hexo-renderer-pug --save
+  - npm install hexo-renderer-sass --save
 
 cache:
   directories:
