@@ -3,6 +3,8 @@ title: hello
 tags: 
 - 生活
 date: 2020-12-30 20:19:30
+categories:
+- 日常
 ---
 
 ## hello
