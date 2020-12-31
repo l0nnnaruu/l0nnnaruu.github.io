@@ -1,5 +1,9 @@
 ---
 title: 模板注入
+tags: 
+- SSTI
+- python
+- flask
 date: 2020-12-30 21:03:00
 ---
 
