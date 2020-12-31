@@ -14,6 +14,11 @@ install:
   - npm install hexo-renderer-marked
   - npm install hexo-renderer-pug --save
   - npm install hexo-renderer-sass --save
+  - npm install hexo-generator-feed --save
+  - npm install hexo-generator-sitemap --save
+  - npm install hexo-generator-baidu-sitemap --save
+  - npm install hexo-baidu-url-submit --save
+  - npm install hexo-generator-search --save
 
 cache:
   directories:
