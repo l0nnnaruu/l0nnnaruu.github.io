@@ -51,7 +51,7 @@ gitment:
   githubID: 'l0nnnaruu'
   repo: 'l0nnnaruu.github.io'
   client_id: '6f10e6807b746c7f414b'
-  client_secret:'' bdea4877781e68415605d54af2b51c89fb07c552'
+  client_secret: 'bdea4877781e68415605d54af2b51c89fb07c552'
   lazy: true
 
 # >>> Style Customisation 样式自定义 <<<
