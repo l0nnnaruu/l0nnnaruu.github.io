@@ -1,6 +1,7 @@
 ---
 title: guestbook
 date: 2020-12-31 20:22:07
+comments: true
 ---
 
 # 欢迎来到我的博客！
