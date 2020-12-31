@@ -5,13 +5,9 @@ type: "schedule"
 comments: false
 ---
 
-
-
 ## 2021
 
-java开发
-
-多刷题
+活下来
 
 ## 2020
 
