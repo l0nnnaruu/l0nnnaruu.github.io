@@ -1,6 +1,7 @@
 ---
 title: about
 date: 2020-12-31 19:37:20
+type: "about"
 ---
 
 ctfer in web,misc
