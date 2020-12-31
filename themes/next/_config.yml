@@ -562,7 +562,7 @@ comments:
   style: tabs
   # Choose a comment system to be displayed by default.
   # Available values: disqus | disqusjs | changyan | livere | gitalk | utterances
-  active:
+  active: valine
   # Setting `true` means remembering the comment system selected by the visitor.
   storage: true
   # Lazyload all comment systems.
@@ -933,3 +933,19 @@ vendors:
 css: css
 js: js
 images: images
+
+
+# Valine
+# For more information: https://valine.js.org, https://github.com/xCss/Valine
+valine:
+  enable: true
+  appId: 9bU97eUlVolo8k1bLSDyGYDS-gzGzoHsz
+  appKey: 2x9iSHrugO0EegGbFEjx16yV
+  serverURLs: # When the custom domain name is enabled, fill it in here
+  placeholder: Just go go # comment box placeholder
+  avatar: mm # gravatar style
+  meta: [nick, mail, link] # Custom comment header
+  pageSize: 10 # pagination size
+  visitor: false # leancloud-counter-security is not supported for now. When visitor is set to be true, appid and appkey are recommended to be the same as leancloud_visitors' for counter compatibility. Article reading statistic https://valine.js.org/visitor.html
+  comment_count: true # If false, comment count will only be displayed in post page, not in home page
+  recordIP: false # Whether to record the commenter IP
