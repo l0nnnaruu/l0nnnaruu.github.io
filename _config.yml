@@ -5,7 +5,7 @@
 # Site
 title: Lonmar'Blog
 subtitle: '永远热爱'
-description: 'lonmar hexo blog'
+description: 'lonmar的博客'
 keywords:
 author: lonmar
 language: 
@@ -117,3 +117,9 @@ excerpt:
   excerpt_excludes: []
   more_excludes: []
   hideWholePostExcerpts: true
+
+search:
+  path: search.xml
+  field: post
+  format: html
+  limit: 10000

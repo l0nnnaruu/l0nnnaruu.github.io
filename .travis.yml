@@ -19,6 +19,7 @@ install:
   - npm install hexo-generator-baidu-sitemap --save
   - npm install hexo-generator-search --save
   - npm install hexo-excerpt --save
+  - npm install hexo-generator-searchdb --save
 
 cache:
   directories:
