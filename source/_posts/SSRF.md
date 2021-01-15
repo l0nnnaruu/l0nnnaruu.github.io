@@ -108,7 +108,7 @@ while True:
         if "flag{" in text:
             exit(0)
     except Exception as e:
-        pri	nt(e)
+        print(e)
 ```
 
 ## 358
