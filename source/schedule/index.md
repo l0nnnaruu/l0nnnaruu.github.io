@@ -7,6 +7,8 @@ comments: false
 # 2021
 
 - 活下来
+- 做一个合格的脚本小子
+- hack it then know it
 
 # 2020
 
