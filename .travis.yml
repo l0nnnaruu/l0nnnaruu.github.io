@@ -19,6 +19,7 @@ install:
   - npm install hexo-excerpt --save
   - npm install hexo-generator-searchdb --save
   - npm install next-theme/hexo-next-valine
+  - npm install hexo-pagination --save
 
 cache:
   directories:
