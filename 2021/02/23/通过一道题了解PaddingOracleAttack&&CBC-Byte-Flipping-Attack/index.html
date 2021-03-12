@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="0x00 AES-CBC简述 加密:      Plaintext: 明文,以16字节为单位分组.最后一块不满16字节的需要用padding填充   以分组8个字节为例：需要填充n个字节，则n个字节都填充0x0n。如果恰好全满，填充8个0x08组成新块。OFB和CFB不需要填充  AES填充遵循  PKCS #7   IV: 初始化向量(16字节),初始向量不同,不同明文得到的密文也不相同 key">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack">
+<meta property="og:url" content="http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/index.html">
+<meta property="og:site_name" content="L0nm4r|Blog">
+<meta property="og:description" content="0x00 AES-CBC简述 加密:      Plaintext: 明文,以16字节为单位分组.最后一块不满16字节的需要用padding填充   以分组8个字节为例：需要填充n个字节，则n个字节都填充0x0n。如果恰好全满，填充8个0x08组成新块。OFB和CFB不需要填充  AES填充遵循  PKCS #7   IV: 初始化向量(16字节),初始向量不同,不同明文得到的密文也不相同 key">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/082113_1459_CBCByteFlip1.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/082113_1459_CBCByteFlip2.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/082113_1459_CBCByteFlip3.jpg">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/1614063423227.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/1614063923928.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/15083384721064.png!small">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/20160926214719743">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/1614067189375.png">
+<meta property="article:published_time" content="2021-02-23T12:06:22.000Z">
+<meta property="article:modified_time" content="2021-02-23T12:34:06.000Z">
+<meta property="article:author" content="L0nm4r">
+<meta property="article:tag" content="CTF">
+<meta property="article:tag" content="密码学">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/082113_1459_CBCByteFlip1.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <li><a href="/">首页</a></li><li><a href="/about/">关于</a></li><li><a href="/archives/">归档</a></li><li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2021/03/12/CTFSHOW-XSS/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">回到顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&text=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&title=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&is_video=false&description=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack&body=Check out this article: http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&title=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&title=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&title=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&title=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&name=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack&description="><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00-AES-CBC%E7%AE%80%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">0x00 AES-CBC简述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-CBC-Byte-Flipping-Attack%E5%8E%9F%E7%90%86"><span class="toc-number">2.</span> <span class="toc-text">0x01 CBC Byte Flipping Attack原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-Padding-oracle-attack"><span class="toc-number">3.</span> <span class="toc-text">0x02  Padding oracle attack</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-NJCTF-2017-web300-Be-Admin"><span class="toc-number">4.</span> <span class="toc-text">0x03 NJCTF 2017 web300 Be Admin</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-other"><span class="toc-number">5.</span> <span class="toc-text">0x04 other</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x05-%E5%8F%82%E8%80%83"><span class="toc-number">6.</span> <span class="toc-text">0x05 参考</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">L0nm4r|Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2021-02-23T12:06:22.000Z" itemprop="datePublished">2021-02-23</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link-link" href="/tags/CTF/" rel="tag">CTF</a>, <a class="tag-link-link" href="/tags/%E5%AF%86%E7%A0%81%E5%AD%A6/" rel="tag">密码学</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2 id="0x00-AES-CBC简述"><a href="#0x00-AES-CBC简述" class="headerlink" title="0x00 AES-CBC简述"></a>0x00 AES-CBC简述</h2><ul>
+<li><strong>加密:</strong></li>
+</ul>
+<p> <img src="082113_1459_CBCByteFlip1.png" alt="img">  </p>
+<p>Plaintext: 明文,以16字节为单位分组.最后一块不满16字节的需要用<a target="_blank" rel="noopener" href="https://blog.csdn.net/u010603798/article/details/98586594">padding填充</a></p>
+<blockquote>
+<p> 以分组8个字节为例：需要填充n个字节，则n个字节都填充0x0n。如果恰好全满，填充8个0x08组成新块。OFB和CFB不需要填充 </p>
+<p>AES填充遵循  PKCS #7 </p>
+</blockquote>
+<p>IV: 初始化向量(16字节),初始向量不同,不同明文得到的密文也不相同</p>
+<p>key: 密钥</p>
+<p>Ciphertext: 密文.</p>
+<p>加密过程:</p>
+<p> Ciphertext-0 = Encrypt(Plaintext-0 XOR IV) (first block)</p>
+<p> Ciphertext-N= Encrypt(Plaintext-N XOR Ciphertext-N-1) </p>
+<ul>
+<li>解密</li>
+</ul>
+<p> <img src="082113_1459_CBCByteFlip2.png" alt="img"> </p>
+<p>解密过程:</p>
+<p> Plaintext-0 = Decrypt(Ciphertext-0) XOR IV </p>
+<p> Plaintext-N= Decrypt(Ciphertext) XOR Ciphertext-N-1</p>
+<h2 id="0x01-CBC-Byte-Flipping-Attack原理"><a href="#0x01-CBC-Byte-Flipping-Attack原理" class="headerlink" title="0x01 CBC Byte Flipping Attack原理"></a>0x01 CBC Byte Flipping Attack原理</h2><p> <img src="082113_1459_CBCByteFlip3.jpg" alt="img"> </p>
+<p>原理: 解密过程是用 Ciphertext-N-1 来帮助解密 Ciphertext-N的,如果控制了 Ciphertext-N-1 那么也可以控制解出来的Plaintext-N,达到篡改消息的目的.</p>
+<p>举例:</p>
+<p>对明文 <code>a:2:&#123;s:4:&quot;name&quot;;s:6:&quot;sdsdsd&quot;;s:8:&quot;greeting&quot;;s:20:&quot;echo &#39;Hello sdsdsd!&#39;&quot;;&#125;</code></p>
+<p>尝试把<code>s:6</code>改为<code> s:7</code></p>
+<p>加密时的明文分组如下,要修改的地方位于block2的第三个字节,需要更改密文的block1的第三个字节,即enc[2]</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Block 1: a:2:&#123;s:4:&quot;name&quot;;</span><br><span class="line">Block 2: s:6:”sdsdsd”;s:8</span><br><span class="line">Block 3: :&quot;greeting&quot;;s:20:</span><br><span class="line">Block 4: “echo ‘Hello sd</span><br><span class="line">Block 5: sdsd!&#39;&quot;;&#125; </span><br></pre></td></tr></table></figure>
+
+<p>脚本如下:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">define(<span class="string">&#x27;MY_AES_KEY&#x27;</span>, <span class="string">&quot;abcdef0123456789&quot;</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">aes</span>(<span class="params"><span class="variable">$data</span>, <span class="variable">$encrypt</span>,<span class="variable">$iv</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$aes</span> = mcrypt_module_open(MCRYPT_RIJNDAEL_128, <span class="string">&#x27;&#x27;</span>, MCRYPT_MODE_CBC, <span class="string">&#x27;&#x27;</span>);</span><br><span class="line">    mcrypt_generic_init(<span class="variable">$aes</span>, MY_AES_KEY, <span class="variable">$iv</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="variable">$encrypt</span> ? mcrypt_generic(<span class="variable">$aes</span>,<span class="variable">$data</span>) : mdecrypt_generic(<span class="variable">$aes</span>,<span class="variable">$data</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">define(<span class="string">&#x27;MY_MAC_LEN&#x27;</span>, <span class="number">40</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">encrypt</span>(<span class="params"><span class="variable">$data</span>,<span class="variable">$iv</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> aes(<span class="variable">$data</span>, <span class="literal">true</span>,<span class="variable">$iv</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">decrypt</span>(<span class="params"><span class="variable">$data</span>,<span class="variable">$iv</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$data</span> = rtrim(aes(<span class="variable">$data</span>, <span class="literal">false</span>,<span class="variable">$iv</span>), <span class="string">&quot;\0&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="variable">$data</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$v</span> = <span class="string">&quot;a:2:&#123;s:4:\&quot;name\&quot;;s:6:\&quot;sdsdsd\&quot;;s:8:\&quot;greeting\&quot;;s:20:\&quot;echo &#x27;Hello sdsdsd!&#x27;\&quot;;&#125;&quot;</span>;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;Plaintext before attack: <span class="subst">$v</span>\n&quot;</span>;</span><br><span class="line"><span class="variable">$enc</span> = @encrypt(<span class="variable">$v</span>,<span class="string">&quot;1234567891234567&quot;</span>);</span><br><span class="line"><span class="variable">$enc</span>[<span class="number">2</span>] =  chr(ord(<span class="variable">$enc</span>[<span class="number">2</span>]) ^ ord(<span class="string">&quot;6&quot;</span>) ^ ord (<span class="string">&quot;7&quot;</span>));</span><br><span class="line"><span class="variable">$b</span> = @decrypt(<span class="variable">$enc</span>,<span class="string">&quot;1234567891234567&quot;</span>);</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;Plaintext AFTER attack : <span class="subst">$b</span>\n&quot;</span>;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>运行结果如下,篡改了block的明文,条件是明文已知</p>
+<p><img src="1614063423227.png" alt="1614063423227"></p>
+<p>虽然篡改了block2的明文,但是block1的明文也受到了影响,如果初始化向量可控,那么很显然也可以控制block1使其恢复正常.</p>
+<p>iv篡改方式如下:</p>
+<p> MIV =  IV XOR Wrong-Ciphertext-0 XOR  Ciphertext-0</p>
+<p>解密过程:</p>
+<p>Plaintext-0 = Decrypt(MIV XOR Wrong-Ciphertext-0)</p>
+<p>​                    = Decrypt(IV XOR Wrong-Ciphertext-0 XOR  Ciphertext-0 XOR Wrong-Ciphertext-0)</p>
+<p>​                    = Decrypt(IV XOR  Ciphertext-0)</p>
+<p>​                    = Plaintext-0</p>
+<p>脚本:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$iv</span>=<span class="string">&quot;1234567891234567&quot;</span>;</span><br><span class="line"><span class="keyword">for</span> (<span class="variable">$i</span>=<span class="number">0</span>;<span class="variable">$i</span>&lt;<span class="number">16</span>;<span class="variable">$i</span>++)</span><br><span class="line">&#123;</span><br><span class="line"><span class="variable">$iv</span>[<span class="variable">$i</span>] = chr(ord(<span class="variable">$b</span>[<span class="variable">$i</span>]) ^ ord(<span class="variable">$iv</span>[<span class="variable">$i</span>]) ^ ord(<span class="variable">$v</span>[<span class="variable">$i</span>]));</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$c</span> = @decrypt(<span class="variable">$enc</span>,<span class="variable">$iv</span>);</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;Plaintext Third attack : <span class="subst">$c</span>\n&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>运行结果,这样就在不影响别的块的情况下,篡改了明文,条件是初始化向量IV可控,明文已知</p>
+<p><img src="1614063923928.png" alt="1614063923928"></p>
+<h2 id="0x02-Padding-oracle-attack"><a href="#0x02-Padding-oracle-attack" class="headerlink" title="0x02  Padding oracle attack"></a>0x02  Padding oracle attack</h2><p>详细内容参考 <a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/database/151167.html">https://www.freebuf.com/articles/database/151167.html</a></p>
+<p> Padding Oracle Attack是针对CBC链接模式的攻击，和具体的加密算法无关 </p>
+<ul>
+<li>padding - <strong>PKCS #5</strong></li>
+</ul>
+<blockquote>
+<p>引自<a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/database/151167.html">https://www.freebuf.com/articles/database/151167.html</a></p>
+</blockquote>
+<p>既然CBC模式涉及到分组，那么就一定存在不能恰好被平均分组的情况，也就是说最后一组的长度可能不够长，这时候就需要对最后一组分组进行填充，使其和其他分组保持长度一致，这时候就需要了解一下填充所要遵循的规则了。对于采用DES算法进行加密的内容，填充规则遵循的是PKCS #5，而AES则是PKCS #7，实际上两者的要求基本一样，区别在于PKCS #5填充是八字节分组而PKCS #7是十六字节，换句话说就是填充的最大位数不一样，一个是0到8一个是0到16，下面我介绍一下PKCS #5的要求。为了保证每一组的长度一致，做法是在最后一个分组后填充一个固定的值，这个值的大小为填充的字节总数（十六进制表示）。例如最后还差4个字符，则填充四个0×04在最后，对于PKCS #5最多填充八位也就是八个0x08，所以填充字节的取值范围是0x01到0x08。<strong>需注意即便分组内容能正好平均分为n组</strong>，<strong>仍需要在最后一组后面填充一个八位分组</strong>，如下图 </p>
+<p> <img src="15083384721064.png!small" alt="Padding oracle attack详细解析"> </p>
+<ul>
+<li> Intermediary Value </li>
+</ul>
+<p>前面提到的CBC模式解密 </p>
+<p>Plaintext-N= Decrypt(Ciphertext-N) XOR Ciphertext-N-1 </p>
+<p> Intermediary Value  = Decrypt(Ciphertext-N) </p>
+<p>如果 Intermediary Value 和Ciphertext-N-1 已知,则显然可以推出明文.</p>
+<p>反过来,如果知道明文和IV,也可以猜解出Intermediary Value</p>
+<p>明文当然不可能已知,但是可以知道的是padding在不符合标准的时候,程序会返回异常.</p>
+<p>可以假设padding长度为1,填充的padding应为 0x01,通过枚举IV最后一个字节,可以枚举出程序不报错的情况.</p>
+<blockquote>
+<p>不报错仅仅意味着padding正确</p>
+</blockquote>
+<p>且这个值只有一个. 然后假设padding长度为2,3,4,字节依次枚举</p>
+<p> <img src="20160926214719743" alt="这里写图片描述">  </p>
+<blockquote>
+<p>详细枚举过程参考 <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_19876131/article/details/52674589">https://blog.csdn.net/qq_19876131/article/details/52674589</a></p>
+</blockquote>
+<ul>
+<li><p>得到了Intermediary Value ,和IV进行异或就可以得到明文, 也就获得了最后一块的明文信息.</p>
+</li>
+<li><p>舍弃掉最后一组密文，只提交第一组到倒数第二组密文，通过构造倒数第三组密文得到倒数第二组密文的明文，最后我们便可以得到全部的明文 </p>
+</li>
+</ul>
+<p> 攻击成立的两个重要假设前提 :</p>
+<p>（1） 攻击者能够控制密文（Ciphertext），以及附带在密文前面的IV（初始化向量）</p>
+<p>（2） 攻击者能够触发密文的解密过程，且能够知道密文的解密结果</p>
+<p>通用exp, <a target="_blank" rel="noopener" href="https://github.com/mpgn/Padding-oracle-attack/blob/master/exploit.py">https://github.com/mpgn/Padding-oracle-attack/blob/master/exploit.py</a></p>
+<h2 id="0x03-NJCTF-2017-web300-Be-Admin"><a href="#0x03-NJCTF-2017-web300-Be-Admin" class="headerlink" title="0x03 NJCTF 2017 web300 Be Admin"></a>0x03 NJCTF 2017 web300 Be Admin</h2><blockquote>
+<p>未知明文情况下的attack</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/L0nm4r/njctf_2017_web_be_admin">https://github.com/L0nm4r/njctf_2017_web_be_admin</a></p>
+<p><img src="1614067189375.png" alt="1614067189375"></p>
+<p>通过备份可以拿到代码.<a target="_blank" rel="noopener" href="https://github.com/L0nm4r/njctf_2017_web_be_admin/blob/master/src/index.php">https://github.com/L0nm4r/njctf_2017_web_be_admin/blob/master/src/index.php</a></p>
+<p>exp: <a target="_blank" rel="noopener" href="https://github.com/L0nm4r/njctf_2017_web_be_admin/blob/master/exp.py">https://github.com/L0nm4r/njctf_2017_web_be_admin/blob/master/exp.py</a></p>
+<p>太菜了,不会写.挖坑,待填.</p>
+<h2 id="0x04-other"><a href="#0x04-other" class="headerlink" title="0x04 other"></a>0x04 other</h2><p>ebctf-2013-web400-cryptoaescbchmac.无法控制IV,但是可以构造命令执行,前几个block不会影响后面命令的执行. <a target="_blank" rel="noopener" href="https://codezen.fr/2013/08/05/ebctf-2013-web400-cryptoaescbchmac-write-up/">https://codezen.fr/2013/08/05/ebctf-2013-web400-cryptoaescbchmac-write-up/</a> </p>
+<h2 id="0x05-参考"><a href="#0x05-参考" class="headerlink" title="0x05 参考"></a>0x05 参考</h2><ul>
+<li><p>AES加密 填充方式 <a target="_blank" rel="noopener" href="https://blog.csdn.net/u010603798/article/details/98586594">https://blog.csdn.net/u010603798/article/details/98586594</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://resources.infosecinstitute.com/topic/cbc-byte-flipping-attack-101-approach/">https://resources.infosecinstitute.com/topic/cbc-byte-flipping-attack-101-approach/</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://codezen.fr/2013/08/05/ebctf-2013-web400-cryptoaescbchmac-write-up/">https://codezen.fr/2013/08/05/ebctf-2013-web400-cryptoaescbchmac-write-up/</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/LeeHDsniper/article/details/81089480">https://blog.csdn.net/LeeHDsniper/article/details/81089480</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://codezen.fr/2013/08/05/ebctf-2013-web400-cryptoaescbchmac-write-up/">https://codezen.fr/2013/08/05/ebctf-2013-web400-cryptoaescbchmac-write-up/</a> </p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_19876131/article/details/61918399">https://blog.csdn.net/qq_19876131/article/details/61918399</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/database/151167.html">https://www.freebuf.com/articles/database/151167.html</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_19876131/article/details/52674589">https://blog.csdn.net/qq_19876131/article/details/52674589</a></p>
+</li>
+</ul>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00-AES-CBC%E7%AE%80%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">0x00 AES-CBC简述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-CBC-Byte-Flipping-Attack%E5%8E%9F%E7%90%86"><span class="toc-number">2.</span> <span class="toc-text">0x01 CBC Byte Flipping Attack原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-Padding-oracle-attack"><span class="toc-number">3.</span> <span class="toc-text">0x02  Padding oracle attack</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-NJCTF-2017-web300-Be-Admin"><span class="toc-number">4.</span> <span class="toc-text">0x03 NJCTF 2017 web300 Be Admin</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-other"><span class="toc-number">5.</span> <span class="toc-text">0x04 other</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x05-%E5%8F%82%E8%80%83"><span class="toc-number">6.</span> <span class="toc-text">0x05 参考</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&text=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&title=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&is_video=false&description=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack&body=Check out this article: http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&title=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&title=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&title=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&title=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://l0nnnaruu.github.io/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack/&name=通过一道题了解PaddingOracleAttack&amp;&amp;CBC-Byte-Flipping-Attack&description="><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick='$("#toc-footer").toggle();return false;'><i class="fa fa-list fa-lg" aria-hidden="true"></i> 目录</a></li>
+        <li id="share"><a class="icon" href="#" onclick='$("#share-footer").toggle();return false;'><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> 顶部</a></li>
+        <li id="menu"><a class="icon" href="#" onclick='$("#nav-footer").toggle();return false;'><i class="fa fa-bars fa-lg" aria-hidden="true"></i> 菜单</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    版权所有 &copy; 2021 L0nm4r
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <li><a href="/">首页</a></li><li><a href="/about/">关于</a></li><li><a href="/archives/">归档</a></li><li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+
+
+<!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-86660611-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'lonmar-cn-1';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+

